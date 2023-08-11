@@ -706,7 +706,17 @@ namespace BL3SaveEditor.Helpers {
             serial = (Borderlands3Serial)value;
             List<string> fullNameParts = (List<string>)serial.GetType().GetProperty((string)parameter).GetValue(serial, null);
 
-            var parts = fullNameParts.Select(x => x.Split('.').Last()).ToList();
+            var parts = fullNameParts.Select(x => {
+                var part = x.Split('.').Last();
+                if (MainWindow.ItemsInfo.TryGetValue(part.ToLower(), out var itemInfo))
+                {
+                    return new ItemInfo { Part = part, Effects = itemInfo.Effects, Negatives = itemInfo.Negatives, Positives = itemInfo.Positives };
+                }
+                else
+                {
+                    return new ItemInfo { Part = part, Effects = null, Positives = null, Negatives = null };
+                }
+            }).ToList();
 
             return parts;
         }
@@ -736,10 +746,11 @@ namespace BL3SaveEditor.Helpers {
     public class StringSerialPair {
         public string Val1 { get; set; } = "";
         public Borderlands3Serial Val2 { get; set; } = null;
-
-        public StringSerialPair(string val1, Borderlands3Serial val2) {
+        public ItemInfo ItemInfo { get; set; }
+        public StringSerialPair(string val1, Borderlands3Serial val2, ItemInfo itemInfo) {
             Val1 = val1;
             Val2 = val2;
+            ItemInfo = itemInfo;
         }
 
         public override string ToString() {

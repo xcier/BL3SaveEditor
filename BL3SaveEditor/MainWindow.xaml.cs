@@ -22,13 +22,19 @@ using AutoUpdaterDotNET;
 using System.Windows.Navigation;
 using System.Diagnostics;
 using System.Reflection;
+using System.ComponentModel;
+using CsvHelper;
+using System.Globalization;
+using CsvHelper.Configuration;
+using OakSave;
+using System.Threading.Tasks;
 
 namespace BL3SaveEditor {
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow {
+    public partial class MainWindow : INotifyPropertyChanged {
 
         #region Databinding Data
         public static string Version { get; private set; } = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -36,11 +42,57 @@ namespace BL3SaveEditor {
         public static RoutedCommand DuplicateCommand { get; } = new RoutedCommand();
         public static RoutedCommand DeleteCommand { get; } = new RoutedCommand();
 
+        private Task _lastSearch;
+
+        private string _partsSearch;
+        public string PartsSearch
+        {
+            get => _partsSearch;
+            set { _partsSearch = value; UpdateParts(); RaisePropertyChanged(nameof(PartsSearch)); }
+        }
+
+        private string _partsSearchIncluded;
+        public string PartsSearchIncluded
+        {
+            get => _partsSearchIncluded;
+            set { _partsSearchIncluded = value; SearchConv.Search = value; RaisePropertyChanged(nameof(PartsSearchIncluded)); RaisePropertyChanged(nameof(SelectedSerial)); }
+        }
+
+        private string _searchTerm;
+        public string SearchTerm
+        {
+            get => _searchTerm;
+            set { _searchTerm = value; UpdateSearchedParts(); RaisePropertyChanged(nameof(SearchTerm)); }
+        }
+
+        private void UpdateSearchedParts()
+        {
+            if(_lastSearch == null)
+            {
+                _lastSearch = Task.Run(async () =>
+                {
+                    await Task.Delay(60);
+                    var items = SlotItems;
+                    await Dispatcher.BeginInvoke(new Action(() => {
+                        isSearch = true;
+                        isExpanded = false;
+                        UpdateSearch(items);
+                        _lastSearch = null;
+                        isExpanded = true;
+                        RaisePropertyChanged(nameof(isExpanded));
+                    }));
+                });
+            }
+        }
+
+        public static Dictionary<string, ItemInfo> ItemsInfo { get; private set; }
+        public static ListCollectionView LootlemonItems { get; set; }
         public int maximumXP { get; } = PlayerXP._XPMaximumLevel;
         public int minimumXP { get; } = PlayerXP._XPMinimumLevel;
         public int maximumMayhemLevel { get; } = MayhemLevel.MaximumLevel;
         public bool bSaveLoaded { get; set; } = false;
         public bool showDebugMaps { get; set; } = false;
+        public bool IsReorder { get; set; }
 
         private bool _ForceLegitParts = true;
         public bool ForceLegitParts { 
@@ -102,49 +154,69 @@ namespace BL3SaveEditor {
                 return new ListCollectionView(skinNames);
             }
         }
+        private IEnumerable<StringSerialPair> cachedItems;
         public ListCollectionView SlotItems {
             get {
-                // Hasn't loaded a save/profile yet
-                if (saveGame == null && profile == null) return null;
-                ObservableCollection<StringSerialPair> px = new ObservableCollection<StringSerialPair>();
-                List<int> usedIndexes = new List<int>();
-                List<Borderlands3Serial> itemsToSearch = null;
+                var px = FilteredSlots;
+                if(px.Count == 0 && (cachedItems == null || string.IsNullOrEmpty(SearchTerm)))
+                {
+                    // Hasn't loaded a save/profile yet
+                    if (saveGame == null && profile == null) return null;
+                    List<int> usedIndexes = new List<int>();
+                    List<Borderlands3Serial> itemsToSearch = null;
 
-                if (saveGame != null) {
-                    var equippedItems = saveGame.Character.EquippedInventoryLists;
-                    foreach (var item in equippedItems) {
-                        if (!item.Enabled || item.InventoryListIndex < 0 || item.InventoryListIndex > saveGame.InventoryItems.Count - 1) continue;
-                        usedIndexes.Add(item.InventoryListIndex);
-                        px.Add(new StringSerialPair("Equipped", saveGame.InventoryItems[item.InventoryListIndex]));
+                    if (saveGame != null) {
+                        var equippedItems = saveGame.Character.EquippedInventoryLists;
+                        foreach (var item in equippedItems) {
+                            if (!item.Enabled || item.InventoryListIndex < 0 || item.InventoryListIndex > saveGame.InventoryItems.Count - 1) continue;
+                            usedIndexes.Add(item.InventoryListIndex);
+
+                            var itemSerial = saveGame.InventoryItems[item.InventoryListIndex];
+                            ItemsInfo.TryGetValue(itemSerial.UserFriendlyName.ToLower(), out var itemInfo);
+                            px.Add(new StringSerialPair("Equipped", itemSerial, itemInfo ?? new ItemInfo()));
+                        }
+                        itemsToSearch = saveGame.InventoryItems;
                     }
-                    itemsToSearch = saveGame.InventoryItems;
+                    else {
+                        itemsToSearch = profile.BankItems;
+                    }
+
+                    for (int i = 0; i < itemsToSearch.Count; i++) {
+                        // Ignore already used (equipped) indexes
+                        if (usedIndexes.Contains(i)) continue;
+                        var serial = itemsToSearch[i];
+
+                        // Split the items out into groups, assume weapons because they're the most numerous and different
+                        string itemType = "Weapon";
+
+                        if (serial.InventoryKey == null) itemType = "Other";
+                        else if (serial.InventoryKey.Contains("_ClassMod")) itemType = "Class Mods";
+                        else if (serial.InventoryKey.Contains("_Artifact")) itemType = "Artifacts";
+                        else if (serial.InventoryKey.Contains("_Shield")) itemType = "Shields";
+                        else if (serial.InventoryKey.Contains("_Customization")) itemType = "Customizations";
+                        else if (serial.InventoryKey.Contains("_GrenadeMod_")) itemType = "Grenades";
+
+                        ItemsInfo.TryGetValue(serial.UserFriendlyName.ToLower(), out var itemInfo);
+                        px.Add(new StringSerialPair(itemType, serial, itemInfo ?? new ItemInfo()));
+                    }
+                    cachedItems = px;
                 }
-                else {
-                    itemsToSearch = profile.BankItems;
-                }
-
-                for (int i = 0; i < itemsToSearch.Count; i++) {
-                    // Ignore already used (equipped) indexes
-                    if (usedIndexes.Contains(i)) continue;
-                    var serial = itemsToSearch[i];
-
-                    // Split the items out into groups, assume weapons because they're the most numerous and different
-                    string itemType = "Weapon";
-
-                    if (serial.InventoryKey == null) itemType = "Other";
-                    else if (serial.InventoryKey.Contains("_ClassMod")) itemType = "Class Mods";
-                    else if (serial.InventoryKey.Contains("_Artifact")) itemType = "Artifacts";
-                    else if (serial.InventoryKey.Contains("_Shield")) itemType = "Shields";
-                    else if (serial.InventoryKey.Contains("_Customization")) itemType = "Customizations";
-                    else if (serial.InventoryKey.Contains("_GrenadeMod_")) itemType = "Grenades";
-                    
-                    px.Add(new StringSerialPair(itemType, serial));
-                }
-
                 ListCollectionView vx = new ListCollectionView(px);
-                // Group them by the "type"
                 vx.GroupDescriptions.Add(new PropertyGroupDescription("Val1"));
                 return vx;
+            }
+        }
+
+        public List<StringSerialPair> FilteredSlots
+        {
+            get {
+                if (!string.IsNullOrWhiteSpace(SearchTerm) && cachedItems != null)
+                {
+                    var searchTerm = SearchTerm.ToLowerInvariant();
+                    return cachedItems.Where(p => p.ToString().ToLowerInvariant().Contains(searchTerm)).ToList();
+                }
+                return new List<StringSerialPair>();
+                
             }
         }
         public ListCollectionView ValidBalances {
@@ -224,9 +296,24 @@ namespace BL3SaveEditor {
                 else {
                     validParts = InventorySerialDatabase.GetValidPartsForParts(SelectedSerial.InventoryKey, SelectedSerial.Parts);
                 }
-                validParts = validParts.Select(x => x.Split('.').Last()).ToList();
-                validParts.Sort();
-                return new ListCollectionView(validParts);
+                var validConstructedParts = validParts.Select(x => {
+                    var part = x.Split('.').Last();
+                    if(ItemsInfo.TryGetValue(part.ToLower(), out var itemInfo))
+                    {
+                        return new ItemInfo { Part = part, Effects = itemInfo.Effects, Negatives = itemInfo.Negatives, Positives = itemInfo.Positives };
+                    }
+                    else
+                    {
+                        return new ItemInfo { Part = part, Effects = null, Positives = null, Negatives = null };
+                    }
+                }).ToList();
+                validConstructedParts.OrderBy(p => p.Part);
+                if(!string.IsNullOrWhiteSpace(PartsSearch))
+                {
+                    var partsSearchTerm = PartsSearch.ToLowerInvariant();
+                    validConstructedParts = validConstructedParts.Where(p => p.Part.ToLowerInvariant().Contains(partsSearchTerm) || (p.SubEffect != null && p.SubEffect.ToLowerInvariant().Contains(partsSearchTerm))).ToList();
+                }
+                return new ListCollectionView(validConstructedParts);
             }
         }
 
@@ -260,7 +347,25 @@ namespace BL3SaveEditor {
                     validParts = validParts.Where(x => vx.Contains(x) || (bHasMayhem && x.Contains("WeaponMayhemLevel_"))).ToList();
 
                 }
-                return new ListCollectionView(validParts.Select(x => x.Split('.').Last()).ToList());
+
+                var validConstructedParts = validParts.Select(x => {
+                    var part = x.Split('.').Last();
+                    if (ItemsInfo.TryGetValue(part.ToLower(), out var itemInfo))
+                    {
+                        return new ItemInfo { Part = part, Effects = itemInfo.Effects, Negatives = itemInfo.Negatives, Positives = itemInfo.Positives };
+                    }
+                    else
+                    {
+                        return new ItemInfo { Part = part, Effects = null, Positives = null, Negatives = null };
+                    }
+                }).ToList();
+                validConstructedParts.OrderBy(p => p.Part);
+                if (!string.IsNullOrWhiteSpace(PartsSearch))
+                {
+                    var partsSearchTerm = PartsSearch.ToLowerInvariant();
+                    validConstructedParts = validConstructedParts.Where(p => p.Part.ToLowerInvariant().Contains(partsSearchTerm)).ToList();
+                }
+                return new ListCollectionView(validConstructedParts);
             }
         }
 
@@ -273,6 +378,22 @@ namespace BL3SaveEditor {
         private static Debug.DebugConsole dbgConsole;
         private bool bLaunched = false;
 
+        public SearchVisibilityConverter SearchConv { get; set; }
+
+        private bool disableEvents;
+        private bool isSearch;
+        private List<Borderlands3Serial> _lootlemonSerialItems;
+        private StringSerialPair _itemToImport;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void RaisePropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
         /// <summary>
         /// The current profile object; will be null if we haven't loaded a profile
         /// </summary>
@@ -282,13 +403,34 @@ namespace BL3SaveEditor {
         /// The current save game object; will be null if we loaded a profile instead of a save game
         /// </summary>
         public BL3Save saveGame { get; set; } = null;
-
+        public bool isExpanded { get; set; } = true;
 
         public MainWindow() {
             this.profile = null;
             this.saveGame = null;
 
+            using (var reader = new StreamReader("INVENTORY_PARTS_INFO_ALL.csv"))
+            {
+                using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                {
+                    csv.Context.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("");
+                    ItemsInfo = csv.GetRecords<ItemInfo>()
+                        .GroupBy(r => r.Part)
+                        .Select(r => r.First())
+                        .ToDictionary(r => r.Part.ToLower());
+                }
+            }
+            using (var reader = new StreamReader("LOOTLEMON_BL3_ITEMS.csv"))
+            {
+                using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                {
+                    csv.Context.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("");
+                    _lootlemonSerialItems = csv.GetRecords<LootlemonItem>().Select(item => Borderlands3Serial.DecryptSerial(item.Code)).ToList();
+                    LootlemonItems = ConvertLootlemon(_lootlemonSerialItems, null);
+                }
+            }
             InitializeComponent();
+            SearchConv = (SearchVisibilityConverter)FindResource("SearchConverter");
             DataContext = this;
 
             // Restore the dark mode state from last run
@@ -315,8 +457,8 @@ namespace BL3SaveEditor {
         private void OpenSaveBtn_Click(object sender, RoutedEventArgs e) {
 
             Dictionary<Platform, string> PlatformFilters = new Dictionary<Platform, string>() {
-                { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav" },
-                { Platform.PS4, "PS4 BL3 Save/Profile (*.sav)|*.sav" }
+                { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|BL3 JSON (*.json)|*.json" },
+                { Platform.PS4, "PS4 BL3 Save/Profile (*.*)|*.*" }
             };
 
             OpenFileDialog fileDialog = new OpenFileDialog {
@@ -326,7 +468,7 @@ namespace BL3SaveEditor {
             };
 
             if (fileDialog.ShowDialog() == true) {
-                Platform platform = PlatformFilters.Keys.ToArray()[fileDialog.FilterIndex - 1];
+                Platform platform = fileDialog.FilterIndex <= 2 ? Platform.PC : Platform.PS4;
                 OpenSave(fileDialog.FileName, platform);
             }
         }
@@ -393,16 +535,18 @@ namespace BL3SaveEditor {
             SaveOpenedFile();
         }
 
-        private void SaveAsSaveBtn_Click(object sender, RoutedEventArgs e) {
+        private void SaveAsSaveBtn_Click(object sender, RoutedEventArgs e)
+        {
             Console.WriteLine("Saving save as...");
-            SaveFileDialog saveFileDialog = new SaveFileDialog() {
+            SaveFileDialog saveFileDialog = new SaveFileDialog()
+            {
                 Title = "Save BL3 Save/Profile",
-                Filter = "BL3 Save/Profile (*.sav)|*.sav",
+                Filter = "BL3 Save/Profile (*.sav)|*.sav|BL3-CLI JSON (*.json)|*.json|BL3 PS4 Save/Profile (*.*)|*.*",
                 InitialDirectory = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "Borderlands 3", "Saved", "SaveGames")
             };
 
             // Update the file like this so that way once you do a save as, it still changes the saved-as file instead of the originally opened file.
-            if(saveFileDialog.ShowDialog() == true) {
+            if (saveFileDialog.ShowDialog() == true) {
                 if (saveGame != null) saveGame.filePath = saveFileDialog.FileName;
                 else if (profile != null) profile.filePath = saveFileDialog.FileName;
             }
@@ -593,25 +737,41 @@ namespace BL3SaveEditor {
         #endregion
 
         #region Backpack / Bank
+        private void UpdateParts()
+        {
+            RaisePropertyChanged(nameof(ValidParts));
+        }
+
+        private void UpdateIncludedParts()
+        {
+
+        }
+
+        private void UpdateSearch(ListCollectionView items)
+        {
+            BackpackListView.ItemsSource = items;
+            //RefreshBackpackView();
+        }
         private void RefreshBackpackView() {
+            disableEvents = true;
             // Need to change the data context real quick to make the GUI update
             var grid = ((Grid)FindName("SerialContentsGrid"));
             grid.DataContext = null;
             grid.DataContext = this;
+            disableEvents = false;
+            //var partsLabel = ((Label)FindName("PartsLabel"));
+            //partsLabel.DataContext = null;
+            //partsLabel.DataContext = this;
+            //partsLabel = ((Label)FindName("GenericPartsLabel"));
+            //partsLabel.DataContext = null;
+            //partsLabel.DataContext = this;
 
-            var partsLabel = ((Label)FindName("PartsLabel"));
-            partsLabel.DataContext = null;
-            partsLabel.DataContext = this;
-            partsLabel = ((Label)FindName("GenericPartsLabel"));
-            partsLabel.DataContext = null;
-            partsLabel.DataContext = this;
-
-            var addPartBtn = ((Button)FindName("GenericPartsAddBtn"));
-            addPartBtn.DataContext = null;
-            addPartBtn.DataContext = this;
-            addPartBtn = ((Button)FindName("PartsAddBtn"));
-            addPartBtn.DataContext = null;
-            addPartBtn.DataContext = this;
+            //var addPartBtn = ((Button)FindName("GenericPartsAddBtn"));
+            //addPartBtn.DataContext = null;
+            //addPartBtn.DataContext = this;
+            //addPartBtn = ((Button)FindName("PartsAddBtn"));
+            //addPartBtn.DataContext = null;
+            //addPartBtn.DataContext = this;
 
         }
         private void IntegerUpDown_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e) {
@@ -625,7 +785,11 @@ namespace BL3SaveEditor {
             SelectedSerial = svp.Val2;
             
             // Scroll to the selected item (in case of duplication / etc)
-            listView.ScrollIntoView(listView.SelectedItem);
+            if(!isSearch)
+            {
+                listView.ScrollIntoView(listView.SelectedItem);
+            }
+            isSearch = false;
 
             RefreshBackpackView();
         }
@@ -1087,7 +1251,291 @@ namespace BL3SaveEditor {
         }
 
         private void UpdateButton_Click(object sender, RoutedEventArgs e) {
-            AutoUpdater.Start(UpdateURL);
+            //AutoUpdater.Start(UpdateURL);
+        }
+
+
+        private void AddPart(string part, bool isGeneric = false)
+        {
+            if (SelectedSerial == null) return;
+            
+            var parts = isGeneric ? SelectedSerial.GenericParts : SelectedSerial.Parts;
+            if (isGeneric && parts.Count == 15)
+                return;
+            else if (!isGeneric && parts.Count == 63)
+                return;
+            parts.Add(InventorySerialDatabase.GetPartFromShortName(isGeneric ? "InventoryGenericPartData" : SelectedSerial.InventoryKey, part));
+
+            // Update the valid parts
+            if(isGeneric)
+            {
+                RaisePropertyChanged(nameof(ValidGenerics));
+            }
+            else
+            {
+                RaisePropertyChanged(nameof(ValidParts));
+            }
+            
+            RefreshBackpackView();
+        }
+
+        private void RemovePart(int index, bool isGeneric = false)
+        {
+            var parts = isGeneric ? SelectedSerial.GenericParts : SelectedSerial.Parts;
+            parts.RemoveAt(index);
+
+            if (isGeneric)
+            {
+                RaisePropertyChanged(nameof(ValidGenerics));
+            }
+            else
+            {
+                RaisePropertyChanged(nameof(ValidParts));
+            }
+
+            RefreshBackpackView();
+        }
+
+        private void PartsOnClick(object sender, MouseButtonEventArgs e)
+        {
+            var allowEvent = !disableEvents;
+            if (sender is ListView view && allowEvent)
+            {
+                disableEvents = true;
+                if (view.SelectedIndex != -1)
+                {
+                    AddPart(view.SelectedValue.ToString(), sender != PartsListView);
+                    view.SelectedIndex = -1;
+                }
+                disableEvents = false;
+            }
+        }
+
+        private void PartsOnRemove(object sender, MouseButtonEventArgs e)
+        {
+            if(!IsReorder)
+            {
+                var allowEvent = !disableEvents;
+                if (sender is ListView view && allowEvent)
+                {
+                    disableEvents = true;
+                    if (view.SelectedIndex != -1)
+                    {
+                        RemovePart(view.SelectedIndex, sender != ListViewSelectedParts);
+                        view.SelectedIndex = -1;
+                    }
+                    disableEvents = false;
+                }
+            }
+        }
+
+        private void ListView_Initialized(object sender, EventArgs e)
+        {
+            ((ListView)sender).SelectedIndex = -1;
+            //if(sender == ListViewSelectedGenerics)
+            //{
+            //    var items = ListViewSelectedGenerics.Items;
+            //}
+        }
+
+        private void upBtn_Click(object sender, RoutedEventArgs e)
+        {
+
+            var isGeneric = true;
+            var index = -1;
+            ListView view;
+            if(ListViewSelectedParts.IsVisible)
+            {
+                isGeneric = false;
+                index = ListViewSelectedParts.SelectedIndex;
+                view = ListViewSelectedParts;
+            }
+            else
+            {
+                index = ListViewSelectedGenerics.SelectedIndex;
+                view = ListViewSelectedGenerics;
+            }
+            var parts = isGeneric ? SelectedSerial.GenericParts : SelectedSerial.Parts;
+            if (index > 0)
+            {
+                var previous = parts[index - 1];
+                parts[index - 1] = view.SelectedValue.ToString();
+                parts[index] = previous;
+                RefreshBackpackView();
+                view.SelectedIndex = index - 1;
+            }
+
+        }
+
+        private void downBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var isGeneric = true;
+            var index = -1;
+            ListView view;
+            if (ListViewSelectedParts.IsVisible)
+            {
+                isGeneric = false;
+                index = ListViewSelectedParts.SelectedIndex;
+                view = ListViewSelectedParts;
+            }
+            else
+            {
+                index = ListViewSelectedGenerics.SelectedIndex;
+                view = ListViewSelectedGenerics;
+            }
+            var parts = isGeneric ? SelectedSerial.GenericParts : SelectedSerial.Parts;
+            if (index < (parts.Count-1))
+            {
+                var previous = parts[index + 1];
+                parts[index + 1] = view.SelectedValue.ToString();
+                parts[index] = previous;
+                RefreshBackpackView();
+                view.SelectedIndex = index + 1;
+            }
+
+        }
+
+        private void topBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var isGeneric = true;
+            var index = -1;
+            ListView view;
+            if (ListViewSelectedParts.IsVisible)
+            {
+                isGeneric = false;
+                index = ListViewSelectedParts.SelectedIndex;
+                view = ListViewSelectedParts;
+            }
+            else
+            {
+                index = ListViewSelectedGenerics.SelectedIndex;
+                view = ListViewSelectedGenerics;
+            }
+            var parts = isGeneric ? SelectedSerial.GenericParts : SelectedSerial.Parts;
+            if (index > 0)
+            {
+                var previous = parts[0];
+                parts[0] = view.SelectedValue.ToString();
+                parts[index] = previous;
+                RefreshBackpackView();
+                view.SelectedIndex = 0;
+            }
+
+
+        }
+
+        private void bottomBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var isGeneric = true;
+            var index = -1;
+            ListView view;
+            if (ListViewSelectedParts.IsVisible)
+            {
+                isGeneric = false;
+                index = ListViewSelectedParts.SelectedIndex;
+                view = ListViewSelectedParts;
+            }
+            else
+            {
+                index = ListViewSelectedGenerics.SelectedIndex;
+                view = ListViewSelectedGenerics;
+            }
+            var parts = isGeneric ? SelectedSerial.GenericParts : SelectedSerial.Parts;
+            if (index < (parts.Count - 1))
+            {
+                var previous = parts[parts.Count - 1];
+                parts[parts.Count - 1] = view.SelectedValue.ToString();
+                parts[index] = previous;
+                RefreshBackpackView();
+                view.SelectedIndex = parts.Count - 1;
+            }
+
+        }
+
+        public static ListCollectionView ConvertLootlemon(List<Borderlands3Serial> itemsToSearch, string SearchTerm)
+        {
+            var px = new List<StringSerialPair>();
+
+            for (int i = 0; i < itemsToSearch.Count; i++)
+            {
+                var serial = itemsToSearch[i];
+
+                // Split the items out into groups, assume weapons because they're the most numerous and different
+                string itemType = "Weapon";
+
+                if (serial.InventoryKey == null) itemType = "Other";
+                else if (serial.InventoryKey.Contains("_ClassMod")) itemType = "Class Mods";
+                else if (serial.InventoryKey.Contains("_Artifact")) itemType = "Artifacts";
+                else if (serial.InventoryKey.Contains("_Shield")) itemType = "Shields";
+                else if (serial.InventoryKey.Contains("_Customization")) itemType = "Customizations";
+                else if (serial.InventoryKey.Contains("_GrenadeMod_")) itemType = "Grenades";
+
+                ItemsInfo.TryGetValue(serial.UserFriendlyName.ToLower(), out var itemInfo);
+                px.Add(new StringSerialPair(itemType, serial, itemInfo ?? new ItemInfo()));
+            }
+
+            ListCollectionView vx = new ListCollectionView(px);
+            vx.GroupDescriptions.Add(new PropertyGroupDescription("Val1"));
+            return vx;
+        }
+
+        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void PropertyGrid_PreparePropertyItem(object sender, Xceed.Wpf.Toolkit.PropertyGrid.PropertyItemEventArgs e)
+        {
+            
+        }
+
+        private void LootlemonView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            _itemToImport = LootlemonView.SelectedItem as StringSerialPair;
+        }
+
+        private ICommand _importCommand;
+
+        public ICommand ImportCommand
+        {
+            get
+            {
+                if (_importCommand == null) _importCommand = new DelegateCommand(ImportBtn_Click);
+
+                return _importCommand;
+            }
+        }
+        private void ImportBtn_Click(object itemToImport)
+        {
+            _itemToImport = itemToImport as StringSerialPair;
+            if (_itemToImport != null)
+            {
+                if (profile == null) saveGame.AddItem(_itemToImport.Val2);
+                else profile.BankItems.Add(_itemToImport.Val2);
+
+                BackpackListView.ItemsSource = null;
+                BackpackListView.ItemsSource = SlotItems;
+            }
+        }
+    }
+
+    public class DelegateCommand : ICommand
+    {
+        public event EventHandler CanExecuteChanged;
+        private Action<object> action;
+
+        public DelegateCommand(Action<object> action)
+        {
+            this.action = action;
+        }
+        public bool CanExecute(object parameter)
+        {
+            return true;
+        }
+
+        public void Execute(object parameter)
+        {
+            action.Invoke(parameter);
         }
     }
 }

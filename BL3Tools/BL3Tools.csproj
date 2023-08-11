@@ -110,9 +110,12 @@
     <Compile Include="GameData\SDU.cs" />
     <Compile Include="GVAS\GVASSave.cs" />
     <Compile Include="Helpers\Helpers.cs" />
+    <Compile Include="IKeyValueJSON.cs" />
+    <Compile Include="ObjectToArrayConverter.cs" />
     <Compile Include="Platform.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Save.cs" />
+    <Compile Include="SaveFileJSON.cs" />
     <Compile Include="TMSUnpack\TMSArchive.cs" />
     <Compile Include="TMSUnpack\TMSUnpacker.cs" />
   </ItemGroup>

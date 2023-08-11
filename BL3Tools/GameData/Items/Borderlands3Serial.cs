@@ -26,6 +26,7 @@ using IOTools;
 using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace BL3Tools.GameData.Items {
 
@@ -52,6 +53,7 @@ namespace BL3Tools.GameData.Items {
         public string InventoryKey { get; set; } = "";
         public string InventoryData { get; set; } = "";
         public string Manufacturer { get; set; } = "";
+        public string ManufacturerClean => Manufacturer.Split('.').Last();
         public List<string> Parts { get; set; } = new List<string>();
         public List<string> GenericParts { get; set; } = new List<string>();
         public List<int> UnkData1 { get; set; } = new List<int>();

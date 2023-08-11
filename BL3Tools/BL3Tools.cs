@@ -8,9 +8,10 @@ using OakSave;
 using System.Linq;
 using BL3Tools.GameData.Items;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace BL3Tools {
-
+    
     public static class BL3Tools {
         public class BL3Exceptions {
             public class InvalidSaveException : Exception {
@@ -56,7 +57,19 @@ namespace BL3Tools {
                     // Backup the file
                     File.WriteAllBytes(filePath + ".bak", originalBytes);
                 }
-
+                if(filePath.EndsWith("json"))
+                {
+                    io.Close();
+                    fs = new FileStream("gvas.bin", FileMode.Open);
+                    io = new IOWrapper(fs, Endian.Little, 0x0000000);
+                    var cachedSaveData = Helpers.ReadGVASSave(io);
+                    var data = Newtonsoft.Json.JsonConvert.DeserializeObject<SaveFileJSON>(File.ReadAllText(filePath));
+                    var jsonSaveGame = data.ToSaveFile(cachedSaveData);
+                    jsonSaveGame.Platform = platform;
+                    jsonSaveGame.filePath = filePath;
+                    io.Close();
+                    return jsonSaveGame;
+                }
                 GVASSave saveData = Helpers.ReadGVASSave(io);
 
                 // Throw an exception if the save is null somehow
@@ -124,6 +137,25 @@ namespace BL3Tools {
 
         public static bool WriteFileToDisk(string filePath, UE3Save saveGame, bool bBackup = true) {
             Console.WriteLine("Writing file to disk...");
+            try
+            {
+                if(filePath.EndsWith("json"))
+                {
+                    var save = new SaveFileJSON();
+                    save.PopulateCharacter((saveGame as BL3Save).Character);
+                    var settings = new JsonSerializerSettings
+                    {
+                        //Converters = new[] { new SaveFileJSON.SaveFileJSONFlaotConverter() }
+                    };
+                    var serialized = JsonConvert.SerializeObject(save, Formatting.Indented, settings);
+                    File.WriteAllText(filePath, serialized);
+                    return true;
+                }
+            }
+            catch(Exception ex)
+            {
+                return false;
+            }
             FileStream fs = new FileStream(filePath, FileMode.Create);
             IOWrapper io = new IOWrapper(fs, Endian.Little, 0x0000000);
             try {
