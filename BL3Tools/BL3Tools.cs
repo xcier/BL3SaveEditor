@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 namespace BL3Tools {
     
     public static class BL3Tools {
+        public static bool IsPS4 { get; private set; }
         public class BL3Exceptions {
             public class InvalidSaveException : Exception {
                 public InvalidSaveException() : base("Invalid BL3 Save") { }
@@ -141,6 +142,7 @@ namespace BL3Tools {
             {
                 if(filePath.EndsWith("json"))
                 {
+                    IsPS4 = (saveGame as BL3Save).Platform == Platform.PS4;
                     var save = new SaveFileJSON();
                     save.PopulateCharacter((saveGame as BL3Save).Character);
                     var settings = new JsonSerializerSettings

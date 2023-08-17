@@ -1087,11 +1087,22 @@
                 </TabItem.Header>
                 <Grid Background="{DynamicResource {x:Static adonisUi:Brushes.Layer1BackgroundBrush}}">
                     <xctk:PropertyGrid IsVirtualizing="True" ShowTitle="False" IsReadOnly="False"
-                            AutoGenerateProperties="True" Style="{StaticResource PropertyGridStyle}">
+AutoGenerateProperties="True" Style="{StaticResource PropertyGridStyle}">
                         <xctk:PropertyGrid.PropertyDefinitions>
-                            <xctk:PropertyDefinition TargetProperties="AbilityData"
-                                IsExpandable="true" />
+                            <xctk:PropertyDefinition TargetProperties="AbilityData" IsExpandable="true" />
+                            <xctk:PropertyDefinition TargetProperties="CharacterSlotSaveGameData" IsExpandable="true" />
+                            <xctk:PropertyDefinition TargetProperties="CrewQuartersGunRack" IsExpandable="true" />
+                            <xctk:PropertyDefinition TargetProperties="CrewQuartersRoom" IsExpandable="true" />
+                            <xctk:PropertyDefinition TargetProperties="DiscoveryData" IsExpandable="true" />
+                            <xctk:PropertyDefinition TargetProperties="GbxZoneMapFodSaveGameData" IsExpandable="true" />
+                            <xctk:PropertyDefinition TargetProperties="GuardianRank" IsExpandable="true" />
+                            <xctk:PropertyDefinition TargetProperties="GuardianRankCharacterData" IsExpandable="true" />
+                            <xctk:PropertyDefinition TargetProperties="PlayerClassData" IsExpandable="true" />
+                            <xctk:PropertyDefinition TargetProperties="TimeOfDaySaveGameData" IsExpandable="true" />
+                            <xctk:PropertyDefinition TargetProperties="UiTrackingSaveGameData" IsExpandable="true" />
+                            <xctk:PropertyDefinition TargetProperties="ChallengeCategoryCompletionPcts" IsExpandable="true" />
                         </xctk:PropertyGrid.PropertyDefinitions>
+
                         <xctk:PropertyGrid.SelectedObject>
                             <MultiBinding Converter="{StaticResource MultiElementObjectBinder1}">
                                 <Binding Path="saveGame.Character" />
@@ -1222,12 +1233,42 @@
                 </TabItem.Header>
                 <Grid Margin="0,0,-6,-5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                     <TextBlock TextWrapping="Wrap" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                            Margin="0,0,131,134" FontSize="13"><Run Text="Developed by"/><Run Text=" "/><Hyperlink NavigateUri="http://fdh.one/" TextDecorations="Underline"><Hyperlink.Foreground>
-                                <LinearGradientBrush EndPoint="1,0.5" StartPoint="0,0.5">
-                                    <GradientStop Color="Red" Offset="0"/>
-                                    <GradientStop Color="Gold" Offset="1.15"/>
-                                </LinearGradientBrush>
-                            </Hyperlink.Foreground><Run Text="FromDarkHell"/></Hyperlink><LineBreak/><LineBreak/><Run Text="Thanks to: "/><LineBreak/><Run Text="- Gibbed, apocalyptech, raptor/cfi2017, c0dycode, apple1417, LostInCompression, DOMIN8"/><LineBreak/><Run Text="Extra special thanks to"/><Run Text=" "/><Hyperlink NavigateUri="https://www.deviantart.com/brokennoah/art/Borderlands-3-icons-797030087" TextDecorations="Underline"><Run Text="BrokenNoah"/></Hyperlink><Run Text=" "/><Run Text="for making the main icon of this program!"/><LineBreak/><Run Text="Without their help, this program would not exist."/><LineBreak/><LineBreak/><Run Text="Of course, thanks to Gearbox Software for creating this game!"/><LineBreak/><Run Text="If you wish to support me financially, you can support me via"/><Run Text=" "/><Hyperlink NavigateUri="https://ko-fi.com/fromdarkhell"><Run Text="ko-fi" TextDecorations="Underline"/></Hyperlink><Run Text=" "/><Run Text="or"/><Run Text=" "/><Hyperlink NavigateUri="https://www.patreon.com/fromdarkhell"><Run Text="Patreon" TextDecorations="Underline"/></Hyperlink><LineBreak/><LineBreak/><LineBreak/><LineBreak/><Run Text="This editor has been modified by ProtoBuffers to load/save json files for bl3-cli and Save Wizard Advanced Mode Exports and a new UI."/><LineBreak/><Run Text="Pre-Release"/></TextBlock>
+                            Margin="0,0,131,134" FontSize="13">
+                        <Run Text="Developed by" />
+                        <Hyperlink NavigateUri="http://fdh.one" TextDecorations="Underline"
+                                Foreground="{StaticResource fdh}" RequestNavigate="Hyperlink_RequestNavigate">
+                            <Run Text="FromDarkHell" />
+                        </Hyperlink>
+                        <LineBreak />
+                        <LineBreak />
+                        <Run Text="Thanks to: " />
+                        <LineBreak />
+                        <Run
+                                Text="- Gibbed, apocalyptech, raptor/cfi2017, c0dycode, apple1417, LostInCompression, DOMIN8" />
+                        <LineBreak />
+                        <Run Text="Extra special thanks to" />
+                        <Hyperlink TextDecorations="Underline"
+                                NavigateUri="https://www.deviantart.com/brokennoah/art/Borderlands-3-icons-797030087">
+                            <Run Text="BrokenNoah" />
+                        </Hyperlink>
+                        <Run Text="for making the main icon of this program!" />
+                        <LineBreak />
+                        <Run Text="Without their help, this program would not exist." />
+                        <LineBreak />
+                        <LineBreak />
+                        <Run Text="Of course, thanks to Gearbox Software for creating this game!" />
+                        <LineBreak />
+                        <Run Text="If you wish to support me financially, you can support me via" />
+                        <Hyperlink NavigateUri="https://ko-fi.com/fromdarkhell"
+                                RequestNavigate="Hyperlink_RequestNavigate">
+                            <Run Text="ko-fi" TextDecorations="Underline" />
+                        </Hyperlink>
+                        <Run Text="or" />
+                        <Hyperlink NavigateUri="https://www.patreon.com/fromdarkhell"
+                                RequestNavigate="Hyperlink_RequestNavigate">
+                            <Run Text="Patreon" TextDecorations="Underline" />
+                        </Hyperlink>
+                    </TextBlock>
 
                     <Expander Header="Batch Processing" HorizontalAlignment="Left" Height="124"
                             VerticalAlignment="Bottom" Width="170" IsExpanded="True" Margin="0,0,0,10">

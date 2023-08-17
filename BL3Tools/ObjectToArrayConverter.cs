@@ -10,6 +10,7 @@ namespace BL3Tools
 {
     internal class ObjectToArrayConverter<TNew, TKey, TValue> : JsonConverter where TNew : IKeyValueJSON<TKey, TValue>, new()
     {
+        public static bool PS4Format { get; set; }
         public override bool CanConvert(Type objectType)
         {
             return true;
@@ -34,7 +35,19 @@ namespace BL3Tools
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            serializer.Serialize(writer, value);
+            if (value is List<TNew> keyValueList)
+            {
+                var dict = new Dictionary<TKey, TValue>();
+                foreach (var val in keyValueList)
+                {
+                    dict[val.key] = val.value; // Using the assignment operator to handle potential duplicate keys
+                }
+                serializer.Serialize(writer, dict);
+            }
+            else
+            {
+                serializer.Serialize(writer, value);
+            }
         }
     }
 }

@@ -76,7 +76,14 @@ namespace BL3SaveEditor {
                     await Dispatcher.BeginInvoke(new Action(() => {
                         isSearch = true;
                         isExpanded = false;
-                        UpdateSearch(items);
+                        if(LootlemonView.IsVisible)
+                        {
+                            LootlemonItems = ConvertLootlemon(_lootlemonSerialItems, _searchTerm);
+                        }
+                        else
+                        {
+                            UpdateSearch(items);
+                        }
                         _lastSearch = null;
                         isExpanded = true;
                         RaisePropertyChanged(nameof(isExpanded));
@@ -86,7 +93,14 @@ namespace BL3SaveEditor {
         }
 
         public static Dictionary<string, ItemInfo> ItemsInfo { get; private set; }
-        public static ListCollectionView LootlemonItems { get; set; }
+
+        ListCollectionView _lootlemonItems;
+        public ListCollectionView LootlemonItems
+        {
+            get => _lootlemonItems;
+            set { _lootlemonItems = value; RaisePropertyChanged(nameof(LootlemonItems)); }
+        }
+
         public int maximumXP { get; } = PlayerXP._XPMaximumLevel;
         public int minimumXP { get; } = PlayerXP._XPMinimumLevel;
         public int maximumMayhemLevel { get; } = MayhemLevel.MaximumLevel;
@@ -457,7 +471,7 @@ namespace BL3SaveEditor {
         private void OpenSaveBtn_Click(object sender, RoutedEventArgs e) {
 
             Dictionary<Platform, string> PlatformFilters = new Dictionary<Platform, string>() {
-                { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|BL3 JSON (*.json)|*.json" },
+                { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|BL3 JSON(*.json)|*.json" },
                 { Platform.PS4, "PS4 BL3 Save/Profile (*.*)|*.*" }
             };
 
@@ -541,14 +555,20 @@ namespace BL3SaveEditor {
             SaveFileDialog saveFileDialog = new SaveFileDialog()
             {
                 Title = "Save BL3 Save/Profile",
-                Filter = "BL3 Save/Profile (*.sav)|*.sav|BL3-CLI JSON (*.json)|*.json|BL3 PS4 Save/Profile (*.*)|*.*",
+                Filter = "BL3 Save/Profile (*.sav)|*.sav|JSON Save (*.json)|*.json|BL3 PS4 Save/Profile (*.*)|*.*",
                 InitialDirectory = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "Borderlands 3", "Saved", "SaveGames")
             };
 
             // Update the file like this so that way once you do a save as, it still changes the saved-as file instead of the originally opened file.
             if (saveFileDialog.ShowDialog() == true) {
-                if (saveGame != null) saveGame.filePath = saveFileDialog.FileName;
-                else if (profile != null) profile.filePath = saveFileDialog.FileName;
+                if (saveGame != null)
+                {
+                    saveGame.filePath = saveFileDialog.FileName;
+                }
+                else if (profile != null) 
+                {
+                    profile.filePath = saveFileDialog.FileName; 
+                }
             }
 
             SaveOpenedFile();
@@ -1470,7 +1490,10 @@ namespace BL3SaveEditor {
                 else if (serial.InventoryKey.Contains("_Customization")) itemType = "Customizations";
                 else if (serial.InventoryKey.Contains("_GrenadeMod_")) itemType = "Grenades";
 
-                ItemsInfo.TryGetValue(serial.UserFriendlyName.ToLower(), out var itemInfo);
+                var name = serial.UserFriendlyName.ToLower();
+                if (!string.IsNullOrWhiteSpace(SearchTerm) && !name.Contains(SearchTerm))
+                    continue;
+                ItemsInfo.TryGetValue(name, out var itemInfo);
                 px.Add(new StringSerialPair(itemType, serial, itemInfo ?? new ItemInfo()));
             }
 
@@ -1495,6 +1518,7 @@ namespace BL3SaveEditor {
         }
 
         private ICommand _importCommand;
+
 
         public ICommand ImportCommand
         {

@@ -19,6 +19,7 @@ namespace BL3Tools
 {
     internal class SaveFileJSON
     {
+
         public class SaveFileJSONFlaotConverter : JsonConverter<float>
         {
             public override float ReadJson(JsonReader reader, Type objectType,
@@ -34,6 +35,7 @@ namespace BL3Tools
                 writer.WriteRawValue(value.ToString());
             }
         }
+
         public BL3Save ToSaveFile(GVASSave saveData)
         {
             return new BL3Save(saveData, LoadCharacter());
