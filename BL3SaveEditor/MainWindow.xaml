@@ -7,9 +7,9 @@
         xmlns:adonisControls="clr-namespace:AdonisUI.Controls;assembly=AdonisUI"
         xmlns:adonisExtensions="clr-namespace:AdonisUI.Extensions;assembly=AdonisUI"
         xmlns:bl3tools="clr-namespace:BL3Tools;assembly=BL3Tools" xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-        mc:Ignorable="d" Title="Borderlands 3 Save Editor" Height="835" Width="1330"
+        mc:Ignorable="d" Title="BL3 ProtoGibbed" Height="835" Width="1330"
         Background="{DynamicResource {x:Static adonisUi:Brushes.Layer0BackgroundBrush}}" UseLayoutRounding="True"
-        Closed="AdonisWindow_Closed" DataContext="{Binding RelativeSource={RelativeSource Self}}">
+        Closed="AdonisWindow_Closed" DataContext="{Binding RelativeSource={RelativeSource Self}}" FontFamily="Segoe UI Black">
     <Window.Style>
         <Style TargetType="Window" BasedOn="{StaticResource {x:Type Window}}" />
     </Window.Style>
@@ -150,7 +150,7 @@
                             HorizontalAlignment="Stretch" />
                 </Grid>
             </TabItem>
-            <TabItem IsEnabled="{Binding saveGame, TargetNullValue=False}">
+            <TabItem IsEnabled="{Binding saveGame, TargetNullValue=False}" FontFamily="Impact">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
                         <Image Width="27" Height="26" Source="Icons\game\MinimapIcon_QuickChange.png" Margin="0 0 5 0"
@@ -1233,42 +1233,12 @@ AutoGenerateProperties="True" Style="{StaticResource PropertyGridStyle}">
                 </TabItem.Header>
                 <Grid Margin="0,0,-6,-5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                     <TextBlock TextWrapping="Wrap" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                            Margin="0,0,131,134" FontSize="13">
-                        <Run Text="Developed by" />
-                        <Hyperlink NavigateUri="http://fdh.one" TextDecorations="Underline"
-                                Foreground="{StaticResource fdh}" RequestNavigate="Hyperlink_RequestNavigate">
-                            <Run Text="FromDarkHell" />
-                        </Hyperlink>
-                        <LineBreak />
-                        <LineBreak />
-                        <Run Text="Thanks to: " />
-                        <LineBreak />
-                        <Run
-                                Text="- Gibbed, apocalyptech, raptor/cfi2017, c0dycode, apple1417, LostInCompression, DOMIN8" />
-                        <LineBreak />
-                        <Run Text="Extra special thanks to" />
-                        <Hyperlink TextDecorations="Underline"
-                                NavigateUri="https://www.deviantart.com/brokennoah/art/Borderlands-3-icons-797030087">
-                            <Run Text="BrokenNoah" />
-                        </Hyperlink>
-                        <Run Text="for making the main icon of this program!" />
-                        <LineBreak />
-                        <Run Text="Without their help, this program would not exist." />
-                        <LineBreak />
-                        <LineBreak />
-                        <Run Text="Of course, thanks to Gearbox Software for creating this game!" />
-                        <LineBreak />
-                        <Run Text="If you wish to support me financially, you can support me via" />
-                        <Hyperlink NavigateUri="https://ko-fi.com/fromdarkhell"
-                                RequestNavigate="Hyperlink_RequestNavigate">
-                            <Run Text="ko-fi" TextDecorations="Underline" />
-                        </Hyperlink>
-                        <Run Text="or" />
-                        <Hyperlink NavigateUri="https://www.patreon.com/fromdarkhell"
-                                RequestNavigate="Hyperlink_RequestNavigate">
-                            <Run Text="Patreon" TextDecorations="Underline" />
-                        </Hyperlink>
-                    </TextBlock>
+                            Margin="0,0,131,134" FontSize="13"><Run Text="Developed by"/><Run Text=" "/><Hyperlink NavigateUri="http://fdh.one/" TextDecorations="Underline"><Hyperlink.Foreground>
+                                <LinearGradientBrush EndPoint="1,0.5" StartPoint="0,0.5">
+                                    <GradientStop Color="Red" Offset="0"/>
+                                    <GradientStop Color="Gold" Offset="1.15"/>
+                                </LinearGradientBrush>
+                            </Hyperlink.Foreground><Run Text="FromDarkHell"/></Hyperlink><LineBreak/><LineBreak/><Run Text="Thanks to: "/><LineBreak/><Run Text="- Gibbed, apocalyptech, raptor/cfi2017, c0dycode, apple1417, LostInCompression, DOMIN8"/><LineBreak/><Run Text="Extra special thanks to"/><Run Text=" "/><Hyperlink NavigateUri="https://www.deviantart.com/brokennoah/art/Borderlands-3-icons-797030087" TextDecorations="Underline"><Run Text="BrokenNoah"/></Hyperlink><Run Text=" "/><Run Text="for making the main icon of this program!"/><LineBreak/><Run Text="Without their help, this program would not exist."/><LineBreak/><LineBreak/><Run Text="Of course, thanks to Gearbox Software for creating this game!"/><LineBreak/><Run Text="If you wish to support me financially, you can support me via"/><Run Text=" "/><Hyperlink NavigateUri="https://ko-fi.com/fromdarkhell"><Run Text="ko-fi" TextDecorations="Underline"/></Hyperlink><Run Text=" "/><Run Text="or"/><Run Text=" "/><Hyperlink NavigateUri="https://www.patreon.com/fromdarkhell"><Run Text="Patreon" TextDecorations="Underline"/></Hyperlink><LineBreak/><LineBreak/><LineBreak/><Run Text="This Save Editor has been modified by ProtoBuffers to include:"/><LineBreak/><Run/><LineBreak/><Run Text="Updated BitWriter/Balances-Parts (less save corruption/see more parts)"/><LineBreak/><Run Text=" "/><LineBreak/><Run Text="Unlocked Raw Tab"/><LineBreak/><Run Text="Save/Load BL3-CLI json and PS4 save wizard advanced mode exports (load as JSON SAVE)"/><LineBreak/><Run Text="New UI resembling the zakism save editor with lootlemon support."/><LineBreak/><Run/><LineBreak/><Run Text="To save to PS4 Save Wizard make sure to set your platform to PS4 before you click save as. When saving go to the bottom where it says &quot;save as type&quot; and set it to JSON before saving!"/></TextBlock>
 
                     <Expander Header="Batch Processing" HorizontalAlignment="Left" Height="124"
                             VerticalAlignment="Bottom" Width="170" IsExpanded="True" Margin="0,0,0,10">
@@ -1294,14 +1264,9 @@ AutoGenerateProperties="True" Style="{StaticResource PropertyGridStyle}">
                             Margin="0,0,6,5">
                         <Run Foreground="MediumPurple" Text="In memory of Baysix. Fly high." />
                     </TextBlock>
-                    <Button Content="Check For Updates" VerticalAlignment="Top" HorizontalAlignment="Right"
-                            Margin="0,22,6,0" Width="120" Click="UpdateButton_Click" />
                     <CheckBox Name="DarkModeBox" Content="Enable Dark Mode" HorizontalAlignment="Right"
-                            Margin="0,51,6,0" VerticalAlignment="Top" IsChecked="True" Height="20"
+                            Margin="0,0,11,0" VerticalAlignment="Top" IsChecked="True" Height="20"
                             Checked="DarkModeBox_Checked" Unchecked="DarkModeBox_Checked" Width="120" />
-                    <Label VerticalAlignment="Top" HorizontalAlignment="Right" FontWeight="Normal"
-                            Content="{Binding Path=Version, Mode=OneTime}" ContentStringFormat="Version: {0}"
-                            Width="120" Margin="0,0,6,0" Height="16" />
                 </Grid>
             </TabItem>
         </TabControl>
