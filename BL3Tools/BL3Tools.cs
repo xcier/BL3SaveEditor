@@ -14,6 +14,8 @@ namespace BL3Tools {
     
     public static class BL3Tools {
         public static bool IsPS4 { get; private set; }
+        public static bool Reload { get; set; }
+
         public class BL3Exceptions {
             public class InvalidSaveException : Exception {
                 public InvalidSaveException() : base("Invalid BL3 Save") { }
@@ -66,7 +68,7 @@ namespace BL3Tools {
                     var cachedSaveData = Helpers.ReadGVASSave(io);
                     var data = Newtonsoft.Json.JsonConvert.DeserializeObject<SaveFileJSON>(File.ReadAllText(filePath));
                     var jsonSaveGame = data.ToSaveFile(cachedSaveData);
-                    jsonSaveGame.Platform = platform;
+                    jsonSaveGame.Platform = (Reload && IsPS4) ? Platform.PS4 : platform;
                     jsonSaveGame.filePath = filePath;
                     io.Close();
                     return jsonSaveGame;
@@ -144,7 +146,30 @@ namespace BL3Tools {
                 {
                     IsPS4 = (saveGame as BL3Save).Platform == Platform.PS4;
                     var save = new SaveFileJSON();
-                    save.PopulateCharacter((saveGame as BL3Save).Character);
+                    var bl3Save = (BL3Save)saveGame;
+                    switch (saveGame.GVASData.sgType) {
+                        case "BP_DefaultOakProfile_C":
+                            // This is probably a little bit unsafe and costly but *ehh*?
+                            BL3Profile vx = (BL3Profile)saveGame;
+                            vx.Profile.BankInventoryLists.Clear();
+                            vx.Profile.BankInventoryLists.AddRange(vx.BankItems.Select(x => x.InventoryKey == null ? x.OriginalData.ItemSerialNumber : x.EncryptSerialToBytes()));
+                            vx.Profile.LostLootInventoryLists.Clear();
+                            vx.Profile.LostLootInventoryLists.AddRange(vx.LostLootItems.Select(x => x.InventoryKey == null ? x.OriginalData.ItemSerialNumber : x.EncryptSerialToBytes()));
+                            break;
+                        case "OakSaveGame":
+                            // Now we've got to update the underlying protobuf data's serial...
+                            foreach(Borderlands3Serial serial in bl3Save.InventoryItems) {
+                                var protobufItem = bl3Save.Character.InventoryItems.FirstOrDefault(x => ReferenceEquals(x, serial.OriginalData));
+                                if(protobufItem == default) {
+                                    throw new BL3Exceptions.SerialParseException(serial.EncryptSerial(), serial.SerialVersion, serial.SerialDatabaseVersion);
+                                }
+                                protobufItem.ItemSerialNumber = serial.EncryptSerialToBytes();
+                            }
+                            break;
+                        default:
+                            throw new BL3Exceptions.InvalidSaveException(saveGame.GVASData.sgType);
+                    }
+                     save.PopulateCharacter(bl3Save.Character);
                     var settings = new JsonSerializerSettings
                     {
                         //Converters = new[] { new SaveFileJSON.SaveFileJSONFlaotConverter() }

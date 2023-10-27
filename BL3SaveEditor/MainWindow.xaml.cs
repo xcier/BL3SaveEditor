@@ -41,6 +41,7 @@ namespace BL3SaveEditor {
 
         public static RoutedCommand DuplicateCommand { get; } = new RoutedCommand();
         public static RoutedCommand DeleteCommand { get; } = new RoutedCommand();
+        public bool SaveGameLoaded => saveGame != null;
 
         private Task _lastSearch;
 
@@ -471,7 +472,7 @@ namespace BL3SaveEditor {
         private void OpenSaveBtn_Click(object sender, RoutedEventArgs e) {
 
             Dictionary<Platform, string> PlatformFilters = new Dictionary<Platform, string>() {
-                { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|BL3 JSON(*.json)|*.json" },
+                { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|JSON Save (*.json)|*.json" },
                 { Platform.PS4, "PS4 BL3 Save/Profile (*.*)|*.*" }
             };
 
@@ -540,7 +541,9 @@ namespace BL3SaveEditor {
             }
 
 #if DEBUG
+            BL3Tools.BL3Tools.Reload = true;
             OpenSave(saveGame == null ? profile.filePath : saveGame.filePath);
+            BL3Tools.BL3Tools.Reload = false;
 #endif
         }
 
@@ -555,7 +558,7 @@ namespace BL3SaveEditor {
             SaveFileDialog saveFileDialog = new SaveFileDialog()
             {
                 Title = "Save BL3 Save/Profile",
-                Filter = "BL3 Save/Profile (*.sav)|*.sav|JSON Save (*.json)|*.json|BL3 PS4 Save/Profile (*.*)|*.*",
+                Filter = "BL3 Save/Profile (*.sav)|*.sav|BL3 JSON Save (*.json)|*.json|BL3 PS4 Save/Profile (*.*)|*.*",
                 InitialDirectory = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "Borderlands 3", "Saved", "SaveGames")
             };
 

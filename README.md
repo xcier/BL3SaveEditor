@@ -1,3 +1,8 @@
+## THIS IS A FORK
+
+Originally created by From Dark Hell https://github.com/FromDarkHell
+This has been edited to support a new UI as well as ps4 save wizard exports.
+
 ## Borderlands 3 Save Editor
 
 A desktop based save _and_ profile editor for [Borderlands 3](borderlands.com/).
@@ -6,8 +11,8 @@ A desktop based save _and_ profile editor for [Borderlands 3](borderlands.com/).
 
 ### Installation / Usage
 
-1. Download the exe/zip for your respective OS/setup available on the [Releases](https://github.com/FromDarkHell/BL3SaveEditor/releases) tab.
-   - _Which one do I download?_ If you don't know which one to download, you probably will want to download `BL3SaveEditor-Portable.zip`<sup>[here](https://github.com/FromDarkHell/BL3SaveEditor/releases/latest/download/BL3SaveEditor-Portable.zip)</sup>. This is a self-contained windows binary. If that one doesn't launch for you, try downloading `BL3SaveEditor.zip`<sup>[here](https://github.com/FromDarkHell/BL3SaveEditor/releases/latest/download/BL3SaveEditor.zip)</sup>.
+1. Download the exe/zip for your respective OS/setup available on the [Releases](https://github.com/xcier/BL3SaveEditor/releases/) tab.
+   - _Which one do I download?_ If you don't know which one to download, you probably will want to download `BL3.ProtoGibbed.zip`<sup>[here](https://github.com/xcier/BL3SaveEditor/latest/download/BL3.ProtoGibbed.zip)</sup>. This is a self-contained windows binary. If that one doesn't launch for you, try downloading `BL3SaveEditor.zip`<sup>[here](https://github.com/FromDarkHell/BL3SaveEditor/releases/latest/download/BL3SaveEditor.zip)</sup>.
 2. Then you download / run the exe
 3. Click `Open`, then you can select either a profile (`profile.sav`) or a game save (`[NUMBERS].sav`).
 4. You can now edit your profile or game save to your hearts content!

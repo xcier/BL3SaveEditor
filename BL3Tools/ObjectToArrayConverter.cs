@@ -35,12 +35,12 @@ namespace BL3Tools
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            if (value is List<TNew> keyValueList)
+            if(value is List<TNew> keyValueList && BL3Tools.IsPS4)
             {
                 var dict = new Dictionary<TKey, TValue>();
-                foreach (var val in keyValueList)
+                foreach(var val in keyValueList)
                 {
-                    dict[val.key] = val.value; // Using the assignment operator to handle potential duplicate keys
+                    dict.Add(val.key, val.value);
                 }
                 serializer.Serialize(writer, dict);
             }
