@@ -132,7 +132,19 @@ namespace BL3Tools.GameData.Items {
             JArray assets = ((JArray)InventoryDatabase[category]["assets"]);
             if (index > assets.Count) return null;
 
-            return assets[index - 1].Value<string>();
+            // Check if the adjusted index is within the valid range of the assets list
+            if (index > 0 && index <= assets.Count)
+            {
+                return assets[index - 1].Value<string>();
+            }
+            else
+            {
+                // Log the issue or handle the case where the index is out of range
+                Console.WriteLine($"Index out of range: {index}. Assets count: {assets.Count}");
+                // Optionally, handle the situation appropriately
+                // For example, return a default value or throw a more descriptive exception
+                return null; // or some default value, depending on the context
+            }
         }
 
         /// <summary>

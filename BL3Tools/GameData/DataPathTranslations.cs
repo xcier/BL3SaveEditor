@@ -28,16 +28,18 @@ namespace BL3Tools.GameData {
         public static readonly string DiamondKeyCurrencyPath = "/Game/Gear/_Shared/_Design/InventoryCategories/InventoryCategory_DiamondKey.InventoryCategory_DiamondKey";
         public static readonly string MoneyCurrencyPath = "/Game/Gear/_Shared/_Design/InventoryCategories/InventoryCategory_Money.InventoryCategory_Money";
         public static readonly string EridiumCurrencyPath = "/Game/Gear/_Shared/_Design/InventoryCategories/InventoryCategory_Eridium.InventoryCategory_Eridium";
-        public static readonly string VaultCard1Path = "/Game/Gear/_Shared/_Design/InventoryCategories/InventoryCategory_VaultCard1Key";
-        public static readonly string VaultCard2Path = "/Game/Gear/_Shared/_Design/InventoryCategories/InventoryCategory_VaultCard2Key";
+        public static readonly string VaultCard1Path = "/Game/Gear/_Shared/_Design/InventoryCategories/InventoryCategory_VaultCard1Key.InventoryCategory_VaultCard1Key";
+        public static readonly string VaultCard2Path = "/Game/Gear/_Shared/_Design/InventoryCategories/InventoryCategory_VaultCard2Key.InventoryCategory_VaultCard2Key";
+        public static readonly string VaultCard3Path = "/Game/Gear/_Shared/_Design/InventoryCategories/InventoryCategory_VaultCard3Key.InventoryCategory_VaultCard3Key";
 
 
         public static uint GoldenKeyHash { get; private set; }
         public static uint DiamondKeyHash { get; private set; }
-        public static uint VaultCard1Hash { get; private set; }
-        public static uint VaultCard2Hash { get; private set; }
         public static uint MoneyHash { get; private set; }
         public static uint EridiumHash { get; private set; }
+        public static uint VaultCard1Hash { get; private set; }
+        public static uint VaultCard2Hash { get; private set; }
+        public static uint VaultCard3Hash { get; private set; }
 
         private static readonly string embeddedFastTravelDatabasePath = "BL3Tools.GameData.Mappings.fast_travel_to_name.json";
 
@@ -80,10 +82,11 @@ namespace BL3Tools.GameData {
 
             GoldenKeyHash = CRC32.Get(GoldenKeyCurrencyPath);
             DiamondKeyHash = CRC32.Get(DiamondKeyCurrencyPath);
-            VaultCard1Hash = CRC32.Get(VaultCard1Path);
-            VaultCard2Hash = CRC32.Get(VaultCard2Path);
             MoneyHash = CRC32.Get(MoneyCurrencyPath);
             EridiumHash = CRC32.Get(EridiumCurrencyPath);
+            VaultCard1Hash = CRC32.Get(VaultCard1Path);
+            VaultCard2Hash = CRC32.Get(VaultCard2Path);
+            VaultCard3Hash = CRC32.Get(VaultCard3Path);
 
             Console.WriteLine("Initialized CRC32 hashes of customization & currency data");
 

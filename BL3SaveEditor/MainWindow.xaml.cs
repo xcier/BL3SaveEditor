@@ -170,29 +170,49 @@ namespace BL3SaveEditor {
             }
         }
         private IEnumerable<StringSerialPair> cachedItems;
-        public ListCollectionView SlotItems {
-            get {
+        public ListCollectionView SlotItems
+        {
+            get
+            {
                 var px = FilteredSlots;
-                if(px.Count == 0 && (cachedItems == null || string.IsNullOrEmpty(SearchTerm)))
+                if (px.Count == 0 && (cachedItems == null || string.IsNullOrEmpty(SearchTerm)))
                 {
                     // Hasn't loaded a save/profile yet
                     if (saveGame == null && profile == null) return null;
                     List<int> usedIndexes = new List<int>();
                     List<Borderlands3Serial> itemsToSearch = null;
 
-                    if (saveGame != null) {
+                    if (saveGame != null)
+                    {
                         var equippedItems = saveGame.Character.EquippedInventoryLists;
-                        foreach (var item in equippedItems) {
-                            if (!item.Enabled || item.InventoryListIndex < 0 || item.InventoryListIndex > saveGame.InventoryItems.Count - 1) continue;
-                            usedIndexes.Add(item.InventoryListIndex);
+                        foreach (var item in equippedItems)
+                        {
+                            try
+                            {
+                                if (IsIndexValid(item.InventoryListIndex, saveGame.InventoryItems.Count))
+                                {
+                                    usedIndexes.Add(item.InventoryListIndex);
 
-                            var itemSerial = saveGame.InventoryItems[item.InventoryListIndex];
-                            ItemsInfo.TryGetValue(itemSerial.UserFriendlyName.ToLower(), out var itemInfo);
-                            px.Add(new StringSerialPair("Equipped", itemSerial, itemInfo ?? new ItemInfo()));
+                                    var itemSerial = saveGame.InventoryItems[item.InventoryListIndex];
+                                    ItemsInfo.TryGetValue(itemSerial.UserFriendlyName.ToLower(), out var itemInfo);
+                                    px.Add(new StringSerialPair("Equipped", itemSerial, itemInfo ?? new ItemInfo()));
+                                }
+                                else
+                                {
+                                    // Log the issue, skip the item, or provide a default value
+                                    LogIndexOutOfRange(item.InventoryListIndex);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                // Handle any unexpected exceptions
+                                LogException(ex);
+                            }
                         }
                         itemsToSearch = saveGame.InventoryItems;
                     }
-                    else {
+                    else
+                    {
                         itemsToSearch = profile.BankItems;
                     }
 
@@ -220,6 +240,26 @@ namespace BL3SaveEditor {
                 vx.GroupDescriptions.Add(new PropertyGroupDescription("Val1"));
                 return vx;
             }
+        }
+
+        private bool IsIndexValid(int index, int count)
+        {
+            // Check if the index is within the valid range
+            return index >= 0 && index < count;
+        }
+
+        private void LogIndexOutOfRange(int index)
+        {
+            // Log the index out of range issue
+            // Implement logging logic here
+            Console.WriteLine($"Index out of range: {index}");
+        }
+
+        private void LogException(Exception ex)
+        {
+            // Log the exception
+            // Implement logging logic here
+            Console.WriteLine($"Exception encountered: {ex.Message}");
         }
 
         public List<StringSerialPair> FilteredSlots
@@ -1543,6 +1583,16 @@ namespace BL3SaveEditor {
                 BackpackListView.ItemsSource = null;
                 BackpackListView.ItemsSource = SlotItems;
             }
+        }
+
+        private void TabCntrl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 

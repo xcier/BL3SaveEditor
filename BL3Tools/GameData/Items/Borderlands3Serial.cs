@@ -164,17 +164,19 @@ namespace BL3Tools.GameData.Items {
         /// </summary>
         /// <param name="serial">A byte array of the given serial</param>
         /// <returns>An object representing the passed in <paramref name="serial"/></returns>
-        public static Borderlands3Serial DecryptSerial(byte[] serial) {
+        public static Borderlands3Serial DecryptSerial(byte[] serial)
+        {
             byte serialVersion = serial[0];
 
             // Some simple checks for version numbers and such
-            if (serialVersion != 3 && serialVersion != 4) {
+            if (serialVersion != 3 && serialVersion != 4)
+            {
                 throw new BL3Tools.BL3Exceptions.SerialParseException(Convert.ToBase64String(serial), serialVersion);
             }
 
             IOWrapper serialIO = new IOWrapper(serial, Endian.Big, 1);
             uint originalSeed = serialIO.ReadUInt32();
-            
+
             // Copy the decrypted serial into a new buffer
             int decryptedSize = (int)(serial.Length - serialIO.Position);
             byte[] decrypted = new byte[decryptedSize];
@@ -184,7 +186,7 @@ namespace BL3Tools.GameData.Items {
             BogoDecrypt(originalSeed, decrypted, 0, decryptedSize);
 
             IOWrapper decryptedSerialIO = new IOWrapper(decrypted, Endian.Big, 0);
-            
+
             // Read in the original checksum
             ushort originalChecksum = decryptedSerialIO.ReadUInt16();
 
@@ -193,10 +195,10 @@ namespace BL3Tools.GameData.Items {
             byte[] remaining = decryptedSerialIO.ReadToEnd().Reverse().ToArray();
 
             byte[] checksumBuffer = Helpers.ConcatArrays(new byte[] {
-                serial[0], // Serial Version
-                serial[1], serial[2], serial[3], serial[4], // Seed 
-                0xFF, 0xFF // When calculating, the preset checksum is 0xFF
-            }, remaining); // Append the remaining (unencrypted) data
+        serial[0], // Serial Version
+        serial[1], serial[2], serial[3], serial[4], // Seed 
+        0xFF, 0xFF // When calculating, the preset checksum is 0xFF
+    }, remaining); // Append the remaining (unencrypted) data
 
             decryptedSerialIO.JumpBack();
 
@@ -205,9 +207,8 @@ namespace BL3Tools.GameData.Items {
             var hash = CRC.GetHashUInt32;
             var computedChecksum = (ushort)(((hash) >> 16) ^ ((hash & 0xFFFF) >> 0));
 
-            if(computedChecksum != originalChecksum)
+            if (computedChecksum != originalChecksum)
                 throw new BL3Tools.BL3Exceptions.SerialParseException(Convert.ToBase64String(serial), serialVersion, originalChecksum, computedChecksum);
-
 
             BitReader reader = new BitReader(decryptedSerialIO);
 
@@ -216,11 +217,14 @@ namespace BL3Tools.GameData.Items {
             // It might not explicitly matter that if this data isn't 128, so for now it stays as a Debug assertion.
             Debug.Assert(randomData == 128);
 
-
             int SerialDatabaseVersion = reader.ReadInt32(7);
             if (SerialDatabaseVersion > InventorySerialDatabase.MaximumVersion)
                 throw new BL3Tools.BL3Exceptions.SerialParseException(Convert.ToBase64String(serial), serialVersion, SerialDatabaseVersion);
 
+            if (reader.BitsRemaining() < InventorySerialDatabase.GetBitsToEat("InventoryBalanceData", SerialDatabaseVersion))
+            {
+                throw new BL3Tools.BL3Exceptions.SerialParseException($"Not enough bits remaining to read balance. BitsRemaining: {reader.BitsRemaining()}, Required: {InventorySerialDatabase.GetBitsToEat("InventoryBalanceData", SerialDatabaseVersion)}");
+            }
             string balance = EatBitsForCategory(reader, "InventoryBalanceData", SerialDatabaseVersion);
             string inventoryData = EatBitsForCategory(reader, "InventoryData", SerialDatabaseVersion);
             string manufacturer = EatBitsForCategory(reader, "ManufacturerData", SerialDatabaseVersion);

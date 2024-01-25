@@ -423,8 +423,9 @@ namespace BL3SaveEditor.Helpers {
         public static Dictionary<string, uint> stringToHash = new Dictionary<string, uint>() {
             { "GoldenKeys", DataPathTranslations.GoldenKeyHash },
             { "DiamondKeys", DataPathTranslations.DiamondKeyHash },
-            { "VaultCard1Keys", DataPathTranslations.VaultCard1Hash },
-            { "VaultCard2Keys", DataPathTranslations.VaultCard2Hash }
+            { "VaultCard1", DataPathTranslations.VaultCard1Hash },
+            { "VaultCard2", DataPathTranslations.VaultCard2Hash },
+            { "VaultCard3", DataPathTranslations.VaultCard3Hash }
         };
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
@@ -453,6 +454,7 @@ namespace BL3SaveEditor.Helpers {
             return prf;
         }
     }
+
     public class ProfileSDUToIntegerConverter : IValueConverter {
         private Profile prf = null;
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
