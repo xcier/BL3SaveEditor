@@ -505,8 +505,52 @@ namespace BL3SaveEditor {
         }
 
         #region Toolbar Interaction
-        private void NewSaveBtn_Click(object sender, RoutedEventArgs e) {
-            Console.WriteLine("New save made...");
+        private void NewSaveBtn_Click(object sender, RoutedEventArgs e)
+        {
+            // Get the directory of the current executable
+            string exeDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+            // Navigate up to the project root directory
+            string projectRoot = Directory.GetParent(exeDirectory).Parent.Parent.FullName;
+
+            // Combine the project root with the relative path to the save file
+            string saveFilePath = Path.Combine(projectRoot, "Starters", "Zane.sav");
+
+            try
+            {
+                // Loading PC Save here
+                OpenSave(saveFilePath, Platform.PC);
+                Console.WriteLine("Loaded save from: " + saveFilePath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Failed to load save ({0}) :: {1}", saveFilePath, ex.Message);
+                MessageBox.Show($"Error loading save: {ex.Message}", "Save Load Exception", AdonisUI.Controls.MessageBoxButton.OK, AdonisUI.Controls.MessageBoxImage.Error);
+            }
+        }
+
+        private void NewPSaveBtn_Click(object sender, RoutedEventArgs e)
+        {
+            // Get the directory of the current executable
+            string exeDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+            // Navigate up to the project root directory
+            string projectRoot = Directory.GetParent(exeDirectory).Parent.Parent.FullName;
+
+            // Combine the project root with the relative path to the save file
+            string saveFilePath = Path.Combine(projectRoot, "Starters", "profile.sav");
+
+            try
+            {
+                // Loading PC Save here
+                OpenSave(saveFilePath, Platform.PC);
+                Console.WriteLine("Loaded save from: " + saveFilePath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Failed to load save ({0}) :: {1}", saveFilePath, ex.Message);
+                MessageBox.Show($"Error loading save: {ex.Message}", "Save Load Exception", AdonisUI.Controls.MessageBoxButton.OK, AdonisUI.Controls.MessageBoxImage.Error);
+            }
         }
 
         private void OpenSaveBtn_Click(object sender, RoutedEventArgs e) {
