@@ -74,16 +74,33 @@ namespace BL3Tools.GameData.Items {
         }
 
 
-        public static string GetKeyForBalance(string balance) {
+        public static string GetKeyForBalance(string balance)
+        {
+            // Check if balance is null
+            if (balance == null)
+            {
+                // Log or handle the null balance scenario
+                return null;
+            }
 
             // Check if the name exists by default
             if (!balance.Contains(".")) balance = $"{balance}.{balance.Split('/').LastOrDefault()}";
 
-            if (KeyDictionary.ContainsKey(balance))
-                return KeyDictionary[balance];
-            else if (KeyDictionary.ContainsKey(balance.ToLower())) 
-                return KeyDictionary[balance.ToLower()];
-            
+            // Ensure KeyDictionary is initialized
+            if (KeyDictionary != null)
+            {
+                // Check if the balance key exists in the dictionary
+                if (KeyDictionary.ContainsKey(balance))
+                    return KeyDictionary[balance];
+                else if (KeyDictionary.ContainsKey(balance.ToLower()))
+                    return KeyDictionary[balance.ToLower()];
+            }
+            else
+            {
+                // Log or handle the uninitialized KeyDictionary scenario
+            }
+
+            // If balance key is not found, return null
             return null;
         }
     }

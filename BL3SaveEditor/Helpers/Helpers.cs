@@ -89,12 +89,15 @@ namespace BL3SaveEditor.Helpers {
     /// <summary>
     /// A simple WPF converter that converts the EXP points of a player to the specified level
     /// </summary>
-    public class EXPointToLevelConverter : IValueConverter {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+    public class EXPointToLevelConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
             return PlayerXP.GetLevelForPoints(System.Convert.ToInt32(value));
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
             return PlayerXP.GetPointsForXPLevel(System.Convert.ToInt32(value));
         }
     }
@@ -104,12 +107,15 @@ namespace BL3SaveEditor.Helpers {
     /// <para></para>
     /// See also: <seealso cref="EXPointToLevelConverter"/>
     /// </summary>
-    public class LevelToEXPointConverter : IValueConverter {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+    public class LevelToEXPointConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
             return PlayerXP.GetPointsForXPLevel(System.Convert.ToInt32(value));
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
             return PlayerXP.GetLevelForPoints(System.Convert.ToInt32(value));
         }
     }

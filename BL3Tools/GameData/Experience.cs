@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BL3Tools.GameData {
+namespace BL3Tools.GameData
+{
 
-    public static class PlayerXP {
+    public static class PlayerXP
+    {
 
         // PlayerExperienceFormula={Multiplier: 60.0, Power: 2.799999952316284, Offset: 7.329999923706055}
         private const float expMultiplier = 60.0f;
@@ -19,15 +21,18 @@ namespace BL3Tools.GameData {
 
         private static Dictionary<int, int> xpLevelTable = new Dictionary<int, int>();
 
-        private static int ComputeEXPLevel(int level) {
+        private static int ComputeEXPLevel(int level)
+        {
             return (int)Math.Floor((Math.Pow(level, expPower) + expOffset) * expMultiplier);
         }
 
-        static PlayerXP() {
+        static PlayerXP()
+        {
             _XPReduction = ComputeEXPLevel(_XPMinimumLevel);
 
             // Add to the dictionary
-            for (int lvl = 1; lvl <= _XPMaximumLevel; lvl++) {
+            for (int lvl = 1; lvl <= _XPMaximumLevel; lvl++)
+            {
                 xpLevelTable.Add(lvl, GetPointsForXPLevel(lvl));
             }
 
@@ -38,10 +43,20 @@ namespace BL3Tools.GameData {
         /// </summary>
         /// <param name="lvl">EXP Level</param>
         /// <returns>The amount of EXP points for the associated amount of points</returns>
-        public static int GetPointsForXPLevel(int lvl) {
+        public static int GetPointsForXPLevel(int lvl)
+        {
             if (lvl <= _XPMinimumLevel) return 0;
 
-            return ComputeEXPLevel(lvl) - _XPReduction;
+            int expPoints = ComputeEXPLevel(lvl) - _XPReduction;
+
+            // Check if the level is the maximum level
+            if (lvl == _XPMaximumLevel)
+            {
+                // Add 1 to the experience points
+                expPoints += 1;
+            }
+
+            return expPoints;
         }
 
         /// <summary>
@@ -49,7 +64,8 @@ namespace BL3Tools.GameData {
         /// </summary>
         /// <param name="points">Amount of XP Points</param>
         /// <returns>The level associated with the points</returns>
-        public static int GetLevelForPoints(int points) {
+        public static int GetLevelForPoints(int points)
+        {
             if (points < 0) return _XPMinimumLevel;
             if (points >= xpLevelTable.Last().Value) return _XPMaximumLevel;
 
@@ -58,7 +74,8 @@ namespace BL3Tools.GameData {
         }
     }
 
-    public static class MayhemLevel {
+    public static class MayhemLevel
+    {
         public static readonly int MinimumLevel = 0;
         public static readonly int MaximumLevel = 10;
     }

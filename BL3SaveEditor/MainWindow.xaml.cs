@@ -913,24 +913,70 @@ namespace BL3SaveEditor {
             e.Handled = true;
         }
         private void NewItemBtn_Click(object sender, RoutedEventArgs e) {
-            Controls.ItemBalanceChanger changer = new Controls.ItemBalanceChanger() { Owner = this };
-            changer.ShowDialog();
+            string serialCode = "BL3(BAAAAACMlIA+GpCAEAAAIQAAAAAAwBkQAAA=)";
+            Console.WriteLine("Pasting serial code: {0}", serialCode);
+            try
+            {
+                Borderlands3Serial item = Borderlands3Serial.DecryptSerial(serialCode);
+                if (item == null) return;
 
-            // The user actually hit the save button and we have data about the item
-            if (changer.SelectedInventoryData != null) {
-                var serial = Borderlands3Serial.CreateSerialFromBalanceData(changer.SelectedBalance);
-                if (serial == null) return;
-
-                serial.InventoryData = changer.SelectedInventoryData;
-                // Set a manufacturer so that way the bindings don't lose their mind
-                serial.Manufacturer = InventorySerialDatabase.GetManufacturers().FirstOrDefault();
-
-                if (profile == null) saveGame.AddItem(serial);
-                else profile.BankItems.Add(serial);
+                if (profile == null) saveGame.AddItem(item);
+                else profile.BankItems.Add(item);
 
                 BackpackListView.ItemsSource = null;
                 BackpackListView.ItemsSource = SlotItems;
+                BackpackListView.Items.Refresh();
                 RefreshBackpackView();
+
+                var selectedValue = BackpackListView.Items.Cast<StringSerialPair>().Where(x => ReferenceEquals(x.Val2, item)).LastOrDefault();
+                BackpackListView.SelectedValue = selectedValue;
+            }
+            catch (BL3Tools.BL3Tools.BL3Exceptions.SerialParseException ex)
+            {
+                string message = ex.Message;
+                Console.WriteLine($"Exception ({message}) parsing serial: {ex.ToString()}");
+                if (ex.knowCause)
+                    MessageBox.Show($"Error parsing serial: {ex.Message}", "Serial Parse Exception", AdonisUI.Controls.MessageBoxButton.OK, AdonisUI.Controls.MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                string message = ex.Message;
+                Console.WriteLine($"Exception ({message}) parsing serial: {ex.ToString()}");
+                MessageBox.Show($"Error parsing serial: {ex.Message}", "Serial Parse Exception", AdonisUI.Controls.MessageBoxButton.OK, AdonisUI.Controls.MessageBoxImage.Error);
+            }
+        }
+        private void NewWeaponBtn_Click(object sender, RoutedEventArgs e)
+        {
+            string serialCode = "BL3(BAAAAABIgIA+QRCBEAAAIQAAAAAAwBkQAAA=)";
+            Console.WriteLine("Pasting serial code: {0}", serialCode);
+            try
+            {
+                Borderlands3Serial item = Borderlands3Serial.DecryptSerial(serialCode);
+                if (item == null) return;
+
+                if (profile == null) saveGame.AddItem(item);
+                else profile.BankItems.Add(item);
+
+                BackpackListView.ItemsSource = null;
+                BackpackListView.ItemsSource = SlotItems;
+                BackpackListView.Items.Refresh();
+                RefreshBackpackView();
+
+                var selectedValue = BackpackListView.Items.Cast<StringSerialPair>().Where(x => ReferenceEquals(x.Val2, item)).LastOrDefault();
+                BackpackListView.SelectedValue = selectedValue;
+            }
+            catch (BL3Tools.BL3Tools.BL3Exceptions.SerialParseException ex)
+            {
+                string message = ex.Message;
+                Console.WriteLine($"Exception ({message}) parsing serial: {ex.ToString()}");
+                if (ex.knowCause)
+                    MessageBox.Show($"Error parsing serial: {ex.Message}", "Serial Parse Exception", AdonisUI.Controls.MessageBoxButton.OK, AdonisUI.Controls.MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                string message = ex.Message;
+                Console.WriteLine($"Exception ({message}) parsing serial: {ex.ToString()}");
+                MessageBox.Show($"Error parsing serial: {ex.Message}", "Serial Parse Exception", AdonisUI.Controls.MessageBoxButton.OK, AdonisUI.Controls.MessageBoxImage.Error);
             }
         }
         private void PasteCodeBtn_Click(object sender, RoutedEventArgs e) {
@@ -1059,6 +1105,7 @@ namespace BL3SaveEditor {
             if (changer.SelectedInventoryData != null) {
                 SelectedInventoryData = changer.SelectedInventoryData;
                 SelectedBalance = changer.SelectedBalance;
+
 
                 RefreshBackpackView();
             }

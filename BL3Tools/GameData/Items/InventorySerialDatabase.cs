@@ -185,7 +185,13 @@ namespace BL3Tools.GameData.Items {
         /// </summary>
         /// <param name="shortName">the ""short name"" of the balance (last end after '.')</param>
         /// <returns>The fully qualified balance of the name</returns>
-        public static string GetBalanceFromShortName(string shortName) {
+        public static string GetBalanceFromShortName(string shortName)
+        {
+            if (string.IsNullOrEmpty(shortName))
+            {
+                return null; // or throw an exception, depending on your requirements
+            }
+
             var balances = ((JArray)InventoryDatabase["InventoryBalanceData"]["assets"]).Children().Select(x => x.Value<string>());
             string balance = balances.FirstOrDefault(x => x.EndsWith(shortName));
 
