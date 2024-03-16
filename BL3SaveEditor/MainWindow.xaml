@@ -67,7 +67,6 @@
         <ToolBar x:Uid="ToolWindowToolbar" AllowDrop="False" Focusable="False" HorizontalAlignment="Left"
                 VerticalAlignment="Top" Background="{DynamicResource {x:Static adonisUi:Brushes.Layer0BackgroundBrush}}"
                 Height="30">
-            <!-- I'm hiding this button for now because I find it to be a pain to work on -->
             <Button Name="NewSaveBtn" Click="NewSaveBtn_Click">
                 <StackPanel Orientation="Horizontal">
                     <Image Width="16" Height="16" Source="Icons\fugue\document-binary.png" Margin="0 0 5 0"
@@ -110,7 +109,7 @@
 
         </ToolBar>
 
-        <TabControl Name="TabCntrl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,30,0,0" SelectionChanged="TabCntrl_SelectionChanged">
+        <TabControl Name="TabCntrl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,30,0,20" SelectionChanged="TabCntrl_SelectionChanged">
             <TabItem IsEnabled="{Binding SaveGameLoaded, TargetNullValue=False}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
@@ -121,6 +120,8 @@
                     </StackPanel>
                 </TabItem.Header>
                 <Grid>
+
+
                     <Label FontWeight="Normal" Content="Save GUID:" HorizontalAlignment="Left" Margin="10,41,0,0"
                             VerticalAlignment="Top" Height="24" VerticalContentAlignment="Center" Width="101" />
                     <TextBox Name="GUIDTextBox" IsEnabled="{Binding Path=bSaveLoaded}"
@@ -148,6 +149,9 @@
                             Value="{Binding Path=saveGame.Character.TimePlayedSeconds, Mode=TwoWay, Converter={StaticResource IntegerToSpanConverter1}}"
                             HorizontalAlignment="Stretch" Margin="116,95,328,0" VerticalAlignment="Top"
                             ToolTip="Format: Days.Hours:Minutes:Seconds" />
+
+
+
                     <Label FontWeight="Normal" Content="Platform:" HorizontalAlignment="Left" Margin="10,10,0,0"
                             VerticalAlignment="Top" Width="101" Height="25" VerticalContentAlignment="Center" />
 
@@ -155,6 +159,21 @@
                             ItemsSource="{Binding Source={StaticResource PlatformDataSource}}"
                             SelectedValue="{Binding Path=saveGame.Platform}" VerticalAlignment="Top"
                             HorizontalAlignment="Stretch" />
+                    <Button Content="Import Missions" x:Name="ImportMissionsBtn" Click="ImportMissionsBtn_Click"
+                        Margin="0,143,1057,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="131"
+                        ToolTip="Imports Missions From Another Save" />
+                    <Button Content="Import Challenges" x:Name="ImportMissionsBtn_Copy" Click="ImportMissionsBtn_Click"
+                        Margin="0,143,921,0" VerticalAlignment="Top" RenderTransformOrigin="2.353,0.208"
+                        HorizontalAlignment="Right" Width="131"
+                        ToolTip="Imports Challenges From Another Save" />
+                    <Button Content="Import Skill Trees" x:Name="ImportSkillTreeBtn_Copy" Click="ImportSkillTreeBtn_Click"
+                        Margin="0,143,785,0" VerticalAlignment="Top" RenderTransformOrigin="2.353,0.208"
+                        HorizontalAlignment="Right" Width="131"
+                        ToolTip="Imports Skill Trees From Another Save" />
+                    <Button Content="Import Region Data" x:Name="ImportRegionsBtn_Copy" Click="ImportRegionsBtn_Click"
+                        Margin="0,143,649,0" VerticalAlignment="Top" RenderTransformOrigin="2.353,0.208"
+                        HorizontalAlignment="Right" Width="131"
+                        ToolTip="Imports Region Data From Another Save" />
 
                 </Grid>
             </TabItem>
@@ -380,6 +399,7 @@
                         </ScrollViewer>
                     </GroupBox>
 
+
                     <CheckBox Name="DbgMapBox" IsEnabled="{Binding bSaveLoaded}"
                             IsChecked="{Binding Path=showDebugMaps, Mode=TwoWay}" Content="Show Debug Travels"
                             HorizontalAlignment="Right" Margin="0,10,28,0" VerticalAlignment="Top" Height="24"
@@ -391,6 +411,57 @@
                     <Button Name="DisableAllTeleportersBtn" IsEnabled="{Binding bSaveLoaded}"
                             Click="DisableAllTeleportersBtn_Click" Content="Disable All Visible"
                             HorizontalAlignment="Right" Margin="0,91,28,0" VerticalAlignment="Top" Width="130" />
+                </Grid>
+            </TabItem>
+            <TabItem IsEnabled="{Binding SaveGameLoaded, TargetNullValue=False}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Width="27" Height="26" Source="Icons\game\Regions.png" Margin="0 0 5 0"
+                                RenderOptions.BitmapScalingMode="Fant" />
+                        <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                Content="Region Data" FontWeight="Medium" />
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <xctk:IntegerUpDown x:Name="UniversalGameStageUpDown"
+                    Value="{Binding UniversalGameStage, UpdateSourceTrigger=PropertyChanged}"
+                    Minimum="0" Increment="1" Grid.Row="0" Margin="136,0,1051,671" Grid.RowSpan="2"/>
+                    <DataGrid x:Name="RegionsDataGrid" AutoGenerateColumns="False" ItemsSource="{Binding SavedRegions}"
+                  Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Auto" Margin="0,30,0,0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Region Path" Binding="{Binding RegionPath}" />
+                            <DataGridTemplateColumn Header="Game Stage">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <xctk:IntegerUpDown Value="{Binding GameStage, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBox HorizontalAlignment="Left" Height="25" TextWrapping="Wrap" Text="All Game Stages:" VerticalAlignment="Top" Width="106" Grid.RowSpan="2"/>
+                    <Button Content="Update All Regions" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="1209,0,0,0" Grid.RowSpan="2" Click="ApplyGameStageToAllRegions_Click" Height="25"/>
+                </Grid>
+            </TabItem>
+            <TabItem IsEnabled="{Binding SaveGameLoaded, TargetNullValue=False}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Width="27" Height="26" Source="Icons/game/SkillTrees.png" Margin="0 0 5 0" RenderOptions.BitmapScalingMode="Fant" />
+                        <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="Skill Trees" FontWeight="Medium" />
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid>
+                    <DataGrid x:Name="SkillTreeDataGrid" AutoGenerateColumns="False" ItemsSource="{Binding Path=saveGame.Character.AbilityData.TreeItemLists}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Skill Tree" Binding="{Binding TreeIdentifier}" Width="Auto"/>
+                            <DataGridTextColumn Header="Skill" Binding="{Binding ItemAssetPath}" Width="*"/>
+                            <DataGridTextColumn Header="Points" Binding="{Binding Points}" Width="Auto"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </Grid>
             </TabItem>
             <TabItem Name="InventoryTabItem" IsEnabled="False" HorizontalAlignment="Left">
@@ -440,6 +511,22 @@
                                         RenderOptions.BitmapScalingMode="Fant" />
                                 <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                                         Content="Paste Code" FontWeight="Medium" />
+                            </StackPanel>
+                        </Button>
+                        <Button Click="DUMPCodeBtn_Click" Name="DUMPCodeBtn">
+                            <StackPanel Orientation="Horizontal">
+                                <Image Width="27" Height="26" Source="Icons\game\AllModIcons_I2E.png" Margin="0 0 5 0"
+                                        RenderOptions.BitmapScalingMode="Fant" />
+                                <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                        Content="Dump Codes" FontWeight="Medium" />
+                            </StackPanel>
+                        </Button>
+                        <Button Click="LoadCodeBtn_Click" Name="LoadCodeBtn">
+                            <StackPanel Orientation="Horizontal">
+                                <Image Width="27" Height="26" Source="Icons\game\AllModIcons_I2E.png" Margin="0 0 5 0"
+                                        RenderOptions.BitmapScalingMode="Fant" />
+                                <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                        Content="Load Codes" FontWeight="Medium" />
                             </StackPanel>
                         </Button>
 
@@ -928,7 +1015,7 @@
                                         </Button.IsEnabled>
                                     </Button>-->
 
-                                    <TabControl Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,30,0,0">
+                                    <TabControl Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,30,0,0" SelectionChanged="TabControl_SelectionChanged">
                                         <TabControl.Resources>
                                             <DataTemplate x:Key="TabTemplate">
                                                 <Grid Height="30">
@@ -1278,7 +1365,7 @@ AutoGenerateProperties="True" Style="{StaticResource PropertyGridStyle}">
                                     <GradientStop Color="Red" Offset="0"/>
                                     <GradientStop Color="Gold" Offset="1.15"/>
                                 </LinearGradientBrush>
-                            </Hyperlink.Foreground><Run Text="FromDarkHell"/></Hyperlink><LineBreak/><LineBreak/><Run Text="Thanks to: "/><LineBreak/><Run Text="- Gibbed, apocalyptech, raptor/cfi2017, c0dycode, apple1417, LostInCompression, DOMIN8"/><LineBreak/><Run Text="Extra special thanks to"/><Run Text=" "/><Hyperlink NavigateUri="https://www.deviantart.com/brokennoah/art/Borderlands-3-icons-797030087" TextDecorations="Underline"><Run Text="BrokenNoah"/></Hyperlink><Run Text=" "/><Run Text="for making the main icon of this program!"/><LineBreak/><Run Text="Without their help, this program would not exist."/><LineBreak/><LineBreak/><Run Text="Of course, thanks to Gearbox Software for creating this game!"/><LineBreak/><Run Text="If you wish to support me financially, you can support me via"/><Run Text=" "/><Hyperlink NavigateUri="https://ko-fi.com/fromdarkhell"><Run Text="ko-fi" TextDecorations="Underline"/></Hyperlink><Run Text=" "/><Run Text="or"/><Run Text=" "/><Hyperlink NavigateUri="https://www.patreon.com/fromdarkhell"><Run Text="Patreon" TextDecorations="Underline"/></Hyperlink><LineBreak/><LineBreak/><LineBreak/><LineBreak/><Run Text="This Editor has been modified by ProtoBuffers!!"/><LineBreak/><Run Text="to support PS4 Save Wizard Saves and BL3-CLI JSON Saves!"/><LineBreak/><Run/><LineBreak/><Run/><LineBreak/><Run Text="Unlocked Raw Tab to allow for more customization within saves.    [1st release]"/><LineBreak/><Run Text="Updated Inventory UI to have a similar aesthetic to the zakism editor.     [1st release]"/><LineBreak/><Run Text="Added New buttons for Save/Profile for those who want to start with a fresh save. [1-29-24]"/><LineBreak/><Run Text="Added the ability to edit Vault Key 1-3 Values in Profile tab.    [1-29-24]"/><LineBreak/><Run Text="Added Editable XP value in General Tab for easy access.    [2-8-24]"/><LineBreak/><Run Text="Fixed XP from being 1 xp off at level 72.    [2-22-24]"/><LineBreak/><Run Text="Fixed Items from not saving properly when generating from new item button.    [2-22-24]"/><LineBreak/><LineBreak/><LineBreak/><Run Text="To load your JSON save change platform in the bottom right of the open save selection box."/><LineBreak/><Run Text="To Save as PC change your platform between PC/PS4 in the general tab then after pressing save as change the save type to JSON."/><LineBreak/><Run/><LineBreak/><Run Text="TO NOT GET AN ERROR IN SAVE WIZARD IMPORT  OPEN THE JSON SAVE IN A JSON EDITOR OR A TEXT EDITOR LIKE NOTEPAD THEN COPY AND PASTE IT VIA ADVANCED MODE!!"/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><Run Text=""/><Hyperlink NavigateUri="https://discord.gg/AhB4NgtPhK" TextDecorations="Underline"><Run Text="FREE PS4 SAVE DECRYPTION: https://discord.gg/AhB4NgtPhK"/></Hyperlink><Run Text=" "/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/></TextBlock>
+                            </Hyperlink.Foreground><Run Text="FromDarkHell"/></Hyperlink><LineBreak/><LineBreak/><Run Text="Thanks to: "/><LineBreak/><Run Text="- Gibbed, apocalyptech, raptor/cfi2017, c0dycode, apple1417, LostInCompression, DOMIN8"/><LineBreak/><Run Text="Extra special thanks to"/><Run Text=" "/><Hyperlink NavigateUri="https://www.deviantart.com/brokennoah/art/Borderlands-3-icons-797030087" TextDecorations="Underline"><Run Text="BrokenNoah"/></Hyperlink><Run Text=" "/><Run Text="for making the main icon of this program!"/><LineBreak/><Run Text="Without their help, this program would not exist."/><LineBreak/><LineBreak/><Run Text="Of course, thanks to Gearbox Software for creating this game!"/><LineBreak/><Run Text="If you wish to support me financially, you can support me via"/><Run Text=" "/><Hyperlink NavigateUri="https://ko-fi.com/fromdarkhell"><Run Text="ko-fi" TextDecorations="Underline"/></Hyperlink><Run Text=" "/><Run Text="or"/><Run Text=" "/><Hyperlink NavigateUri="https://www.patreon.com/fromdarkhell"><Run Text="Patreon" TextDecorations="Underline"/></Hyperlink><LineBreak/><LineBreak/><LineBreak/><LineBreak/><Run Text="This Editor has been modified by ProtoBuffers!!"/><LineBreak/><Run Text="to support PS4 Save Wizard Saves and BL3-CLI JSON Saves!"/><LineBreak/><Run/><LineBreak/><Run/><LineBreak/><Run Text="Unlocked Raw Tab to allow for more customization within saves.    [1st release]"/><LineBreak/><Run Text="Updated Inventory UI to have a similar aesthetic to the zakism editor.     [1st release]"/><LineBreak/><Run Text="Added New buttons for Save/Profile for those who want to start with a fresh save. [1-29-24]"/><LineBreak/><Run Text="Added the ability to edit Vault Key 1-3 Values in Profile tab.    [1-29-24]"/><LineBreak/><Run Text="Added Editable XP value in General Tab for easy access.    [2-8-24]"/><LineBreak/><Run Text="Fixed XP from being 1 xp off at level 72.    [2-22-24]"/><LineBreak/><Run Text="Fixed Items from not saving properly when generating from new item button.    [2-22-24]"/><LineBreak/><Run Text="Added Region Data and Skill Tree Tabs, import button from other saves, Import/Export Weapons/Items [3-16-24]"/><LineBreak/><LineBreak/><LineBreak/><Run Text="To load your JSON save change platform in the bottom right of the open save selection box."/><LineBreak/><Run Text="To Save as PC change your platform between PC/PS4 in the general tab then after pressing save as change the save type to JSON."/><LineBreak/><Run/><LineBreak/><Run Text="TO NOT GET AN ERROR IN SAVE WIZARD IMPORT  OPEN THE JSON SAVE IN A JSON EDITOR OR A TEXT EDITOR LIKE NOTEPAD THEN COPY AND PASTE IT VIA ADVANCED MODE!!"/><LineBreak/><LineBreak/><Run Text=""/><Hyperlink NavigateUri="https://discord.gg/AhB4NgtPhK" TextDecorations="Underline"><Run Text="FREE PS4 SAVE DECRYPTION: https://discord.gg/AhB4NgtPhK"/></Hyperlink><Run Text=" "/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/></TextBlock>
 
                     <Expander Header="Batch Processing" HorizontalAlignment="Left" Height="124"
                             VerticalAlignment="Bottom" Width="170" IsExpanded="True" Margin="0,0,0,10">
@@ -1315,6 +1402,5 @@ AutoGenerateProperties="True" Style="{StaticResource PropertyGridStyle}">
                 </Grid>
             </TabItem>
         </TabControl>
-
     </Grid>
 </adonisControls:AdonisWindow>

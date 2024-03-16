@@ -29,12 +29,14 @@ using CsvHelper.Configuration;
 using OakSave;
 using System.Threading.Tasks;
 
-namespace BL3SaveEditor {
+namespace BL3SaveEditor
+{
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : INotifyPropertyChanged {
+    public partial class MainWindow : INotifyPropertyChanged
+    {
 
         #region Databinding Data
         public static string Version { get; private set; } = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -68,16 +70,17 @@ namespace BL3SaveEditor {
 
         private void UpdateSearchedParts()
         {
-            if(_lastSearch == null)
+            if (_lastSearch == null)
             {
                 _lastSearch = Task.Run(async () =>
                 {
                     await Task.Delay(60);
                     var items = SlotItems;
-                    await Dispatcher.BeginInvoke(new Action(() => {
+                    await Dispatcher.BeginInvoke(new Action(() =>
+                    {
                         isSearch = true;
                         isExpanded = false;
-                        if(LootlemonView.IsVisible)
+                        if (LootlemonView.IsVisible)
                         {
                             LootlemonItems = ConvertLootlemon(_lootlemonSerialItems, _searchTerm);
                         }
@@ -110,9 +113,11 @@ namespace BL3SaveEditor {
         public bool IsReorder { get; set; }
 
         private bool _ForceLegitParts = true;
-        public bool ForceLegitParts { 
+        public bool ForceLegitParts
+        {
             get { return _ForceLegitParts; }
-            set {
+            set
+            {
                 _ForceLegitParts = value;
                 RefreshBackpackView();
                 ValidParts.Refresh();
@@ -120,26 +125,31 @@ namespace BL3SaveEditor {
             }
         }
 
-        public ListCollectionView ValidPlayerClasses { 
-            get {
+        public ListCollectionView ValidPlayerClasses
+        {
+            get
+            {
                 return new ListCollectionView(BL3Save.ValidClasses.Keys.ToList());
             }
         }
-        public ListCollectionView ValidPlayerHeads {
-            get {
+        public ListCollectionView ValidPlayerHeads
+        {
+            get
+            {
                 // Hasn't loaded a save yet
                 if (saveGame == null) return new ListCollectionView(new List<string>() { "" });
-                
+
                 string characterClassPath = saveGame.Character.PlayerClassData.PlayerClassPath;
                 var kvp = BL3Save.ValidClasses.Where(x => x.Value.PlayerClassPath == characterClassPath);
-                
+
                 // Unknown character?
-                if(!kvp.Any()) return new ListCollectionView(new List<string>() { "" });
+                if (!kvp.Any()) return new ListCollectionView(new List<string>() { "" });
                 string characterName = kvp.First().Key;
 
                 var headAssetPaths = DataPathTranslations.HeadNamesDictionary[characterName];
                 List<string> headNames = new List<string>();
-                foreach(string assetPath in headAssetPaths) {
+                foreach (string assetPath in headAssetPaths)
+                {
                     string headName = DataPathTranslations.headAssetPaths[assetPath];
                     headNames.Add(headName);
                 }
@@ -147,8 +157,10 @@ namespace BL3SaveEditor {
                 return new ListCollectionView(headNames);
             }
         }
-        public ListCollectionView ValidPlayerSkins {
-            get {
+        public ListCollectionView ValidPlayerSkins
+        {
+            get
+            {
                 // Hasn't loaded a save yet
                 if (saveGame == null) return new ListCollectionView(new List<string>() { "" });
 
@@ -161,7 +173,8 @@ namespace BL3SaveEditor {
 
                 var skinAssetPaths = DataPathTranslations.SkinNamesDictionary[characterName];
                 List<string> skinNames = new List<string>();
-                foreach (string assetPath in skinAssetPaths) {
+                foreach (string assetPath in skinAssetPaths)
+                {
                     string headName = DataPathTranslations.skinAssetPaths[assetPath];
                     skinNames.Add(headName);
                 }
@@ -216,7 +229,8 @@ namespace BL3SaveEditor {
                         itemsToSearch = profile.BankItems;
                     }
 
-                    for (int i = 0; i < itemsToSearch.Count; i++) {
+                    for (int i = 0; i < itemsToSearch.Count; i++)
+                    {
                         // Ignore already used (equipped) indexes
                         if (usedIndexes.Contains(i)) continue;
                         var serial = itemsToSearch[i];
@@ -264,18 +278,21 @@ namespace BL3SaveEditor {
 
         public List<StringSerialPair> FilteredSlots
         {
-            get {
+            get
+            {
                 if (!string.IsNullOrWhiteSpace(SearchTerm) && cachedItems != null)
                 {
                     var searchTerm = SearchTerm.ToLowerInvariant();
                     return cachedItems.Where(p => p.ToString().ToLowerInvariant().Contains(searchTerm)).ToList();
                 }
                 return new List<StringSerialPair>();
-                
+
             }
         }
-        public ListCollectionView ValidBalances {
-            get {
+        public ListCollectionView ValidBalances
+        {
+            get
+            {
                 if (SelectedSerial == null) return null;
 
                 string inventoryKey = SelectedSerial.InventoryKey;
@@ -284,55 +301,70 @@ namespace BL3SaveEditor {
                 return new ListCollectionView(balances);
             }
         }
-        public string SelectedBalance {
-            get {
-                if (SelectedSerial == null) return null;                
+        public string SelectedBalance
+        {
+            get
+            {
+                if (SelectedSerial == null) return null;
                 return InventorySerialDatabase.GetShortNameFromBalance(SelectedSerial.Balance);
             }
-            set {
+            set
+            {
                 if (SelectedSerial == null) return;
                 SelectedSerial.Balance = InventorySerialDatabase.GetBalanceFromShortName(value);
             }
         }
-        public ListCollectionView ValidManufacturers {
-            get {
+        public ListCollectionView ValidManufacturers
+        {
+            get
+            {
                 return new ListCollectionView(InventorySerialDatabase.GetManufacturers());
             }
         }
-        public string SelectedManufacturer {
-            get {
+        public string SelectedManufacturer
+        {
+            get
+            {
                 if (SelectedSerial == null) return null;
                 string Manufacturer = SelectedSerial.Manufacturer;
-                
+
                 List<string> shortNames = InventorySerialDatabase.GetManufacturers();
                 List<string> longNames = InventorySerialDatabase.GetManufacturers(false);
-                try {
+                try
+                {
                     return shortNames[longNames.IndexOf(Manufacturer)];
                 }
-                catch {
+                catch
+                {
                     return Manufacturer;
                 }
 
             }
-            set {
+            set
+            {
                 if (SelectedSerial == null) return;
-                
+
                 List<string> shortNames = InventorySerialDatabase.GetManufacturers();
                 List<string> longNames = InventorySerialDatabase.GetManufacturers(false);
 
                 SelectedSerial.Manufacturer = longNames[shortNames.IndexOf(value)];
             }
         }
-        public ListCollectionView InventoryDatas {
-            get {
+        public ListCollectionView InventoryDatas
+        {
+            get
+            {
                 return new ListCollectionView(InventorySerialDatabase.GetInventoryDatas());
             }
         }
-        public string SelectedInventoryData {
-            get {
+        public string SelectedInventoryData
+        {
+            get
+            {
                 return SelectedSerial?.InventoryData.Split('.').LastOrDefault();
             }
-            set {
+            set
+            {
                 if (SelectedSerial == null) return;
 
                 List<string> shortNames = InventorySerialDatabase.GetInventoryDatas();
@@ -342,18 +374,22 @@ namespace BL3SaveEditor {
         }
         public Borderlands3Serial SelectedSerial { get; set; }
 
-        public ListCollectionView ValidParts {
-            get {
+        public ListCollectionView ValidParts
+        {
+            get
+            {
                 if (SelectedSerial == null) return null;
                 List<string> validParts = new List<string>();
 
-                if(!ForceLegitParts) validParts = InventorySerialDatabase.GetPartsForInvKey(SelectedSerial.InventoryKey);
-                else {
+                if (!ForceLegitParts) validParts = InventorySerialDatabase.GetPartsForInvKey(SelectedSerial.InventoryKey);
+                else
+                {
                     validParts = InventorySerialDatabase.GetValidPartsForParts(SelectedSerial.InventoryKey, SelectedSerial.Parts);
                 }
-                var validConstructedParts = validParts.Select(x => {
+                var validConstructedParts = validParts.Select(x =>
+                {
                     var part = x.Split('.').Last();
-                    if(ItemsInfo.TryGetValue(part.ToLower(), out var itemInfo))
+                    if (ItemsInfo.TryGetValue(part.ToLower(), out var itemInfo))
                     {
                         return new ItemInfo { Part = part, Effects = itemInfo.Effects, Negatives = itemInfo.Negatives, Positives = itemInfo.Positives };
                     }
@@ -363,7 +399,7 @@ namespace BL3SaveEditor {
                     }
                 }).ToList();
                 validConstructedParts.OrderBy(p => p.Part);
-                if(!string.IsNullOrWhiteSpace(PartsSearch))
+                if (!string.IsNullOrWhiteSpace(PartsSearch))
                 {
                     var partsSearchTerm = PartsSearch.ToLowerInvariant();
                     validConstructedParts = validConstructedParts.Where(p => p.Part.ToLowerInvariant().Contains(partsSearchTerm) || (p.SubEffect != null && p.SubEffect.ToLowerInvariant().Contains(partsSearchTerm))).ToList();
@@ -372,8 +408,10 @@ namespace BL3SaveEditor {
             }
         }
 
-        public ListCollectionView ValidGenerics {
-            get {
+        public ListCollectionView ValidGenerics
+        {
+            get
+            {
                 if (SelectedSerial == null) return null;
                 List<string> validParts = new List<string>();
 
@@ -383,14 +421,16 @@ namespace BL3SaveEditor {
                 // Currently no generic parts actually have any excluders/dependencies
                 // but in the future they might so let's still enforce legit parts on them
                 if (!ForceLegitParts) validParts = InventorySerialDatabase.GetPartsForInvKey("InventoryGenericPartData");
-                else {
+                else
+                {
                     validParts = InventorySerialDatabase.GetValidPartsForParts("InventoryGenericPartData", SelectedSerial.GenericParts);
                     var vx = InventorySerialDatabase.GetValidPartsForParts("InventoryGenericPartData", SelectedSerial.Parts);
                     var validGenerics = InventorySerialDatabase.GetValidGenericsForBalance(SelectedSerial.Balance);
 
                     var itemType = InventoryKeyDB.ItemTypeToKey.LastOrDefault(x => x.Value.Contains(SelectedSerial.InventoryKey)).Key;
                     bool bHasMayhem = (itemType == null);
-                    if (itemType != null) {
+                    if (itemType != null)
+                    {
                         // Only certain item types can be anointed...
                         bHasMayhem = (itemType != "Grenades" && itemType != "Shields" && itemType != "Class Mods" && itemType != "Artifacts" && itemType != "Eridian Fabricator" && itemType != "Customizations");
                     }
@@ -403,7 +443,8 @@ namespace BL3SaveEditor {
 
                 }
 
-                var validConstructedParts = validParts.Select(x => {
+                var validConstructedParts = validParts.Select(x =>
+                {
                     var part = x.Split('.').Last();
                     if (ItemsInfo.TryGetValue(part.ToLower(), out var itemInfo))
                     {
@@ -424,8 +465,8 @@ namespace BL3SaveEditor {
             }
         }
 
-        public int MaximumBankSDUs { get { return SDU.MaximumBankSDUs;  } }
-        public int MaximumLostLootSDUs { get { return SDU.MaximumLostLoot;  } }
+        public int MaximumBankSDUs { get { return SDU.MaximumBankSDUs; } }
+        public int MaximumLostLootSDUs { get { return SDU.MaximumLostLoot; } }
         #endregion
 
         private static string UpdateURL = "https://raw.githubusercontent.com/FromDarkHell/BL3SaveEditor/main/BL3SaveEditor/AutoUpdater.xml";
@@ -460,7 +501,8 @@ namespace BL3SaveEditor {
         public BL3Save saveGame { get; set; } = null;
         public bool isExpanded { get; set; } = true;
 
-        public MainWindow() {
+        public MainWindow()
+        {
             this.profile = null;
             this.saveGame = null;
 
@@ -553,32 +595,38 @@ namespace BL3SaveEditor {
             }
         }
 
-        private void OpenSaveBtn_Click(object sender, RoutedEventArgs e) {
+        private void OpenSaveBtn_Click(object sender, RoutedEventArgs e)
+        {
 
             Dictionary<Platform, string> PlatformFilters = new Dictionary<Platform, string>() {
                 { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|JSON Save (*.json)|*.json" },
                 { Platform.PS4, "PS4 BL3 Save/Profile (*.*)|*.*" }
             };
 
-            OpenFileDialog fileDialog = new OpenFileDialog {
+            OpenFileDialog fileDialog = new OpenFileDialog
+            {
                 Title = "Select BL3 Save/Profile",
                 Filter = string.Join("|", PlatformFilters.Values),
                 InitialDirectory = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "Borderlands 3", "Saved", "SaveGames"),
             };
 
-            if (fileDialog.ShowDialog() == true) {
+            if (fileDialog.ShowDialog() == true)
+            {
                 Platform platform = fileDialog.FilterIndex <= 2 ? Platform.PC : Platform.PS4;
                 OpenSave(fileDialog.FileName, platform);
             }
         }
 
-        private void OpenSave(string filePath, Platform platform = Platform.PC) {
-            try {
+        private void OpenSave(string filePath, Platform platform = Platform.PC)
+        {
+            try
+            {
                 // Reload the save just for safety, this way we're getting the "saved" version on a save...
                 object saveObj = BL3Tools.BL3Tools.LoadFileFromDisk(filePath, platform);
                 Console.WriteLine($"Reading a save of type: {saveObj.GetType()}");
 
-                if (saveObj.GetType() == typeof(BL3Profile)) {
+                if (saveObj.GetType() == typeof(BL3Profile))
+                {
                     profile = (BL3Profile)saveObj;
                     saveGame = null;
                     bSaveLoaded = false;
@@ -586,12 +634,16 @@ namespace BL3SaveEditor {
                     TabCntrl.SelectedIndex = 5;
 
                 }
-                else {
+                else
+                {
                     saveGame = (BL3Save)saveObj;
                     profile = null;
                     bSaveLoaded = true;
-                    // General tab
                     TabCntrl.SelectedIndex = 0;
+
+                    // This allows us to load data into datagrids
+                    RegionsDataGrid.ItemsSource = saveGame.Character.SavedRegions;
+                    SkillTreeDataGrid.ItemsSource = saveGame.Character.AbilityData.TreeItemLists;
                 }
 
             ((TabItem)FindName("RawTabItem")).IsEnabled = true;
@@ -608,7 +660,8 @@ namespace BL3SaveEditor {
                 BackpackListView.ItemsSource = SlotItems;
                 RefreshBackpackView();
             }
-            catch(Exception ex) {
+            catch (Exception ex)
+            {
                 Console.WriteLine("Failed to load save ({0}) :: {1}", filePath, ex.Message);
                 Console.WriteLine(ex.StackTrace);
 
@@ -616,9 +669,11 @@ namespace BL3SaveEditor {
             }
         }
 
-        private void SaveOpenedFile() {
+        private void SaveOpenedFile()
+        {
             if (saveGame != null) BL3Tools.BL3Tools.WriteFileToDisk(saveGame);
-            else if (profile != null) {
+            else if (profile != null)
+            {
                 BL3Tools.BL3Tools.WriteFileToDisk(profile);
                 DirectoryInfo saveFiles = new DirectoryInfo(Path.GetDirectoryName(profile.filePath));
                 InjectGuardianRank(saveFiles.EnumerateFiles("*.sav").Select(x => x.FullName).ToArray());
@@ -631,7 +686,8 @@ namespace BL3SaveEditor {
 #endif
         }
 
-        private void SaveSaveBtn_Click(object sender, RoutedEventArgs e) {
+        private void SaveSaveBtn_Click(object sender, RoutedEventArgs e)
+        {
             Console.WriteLine("Saving save...");
             SaveOpenedFile();
         }
@@ -647,27 +703,30 @@ namespace BL3SaveEditor {
             };
 
             // Update the file like this so that way once you do a save as, it still changes the saved-as file instead of the originally opened file.
-            if (saveFileDialog.ShowDialog() == true) {
+            if (saveFileDialog.ShowDialog() == true)
+            {
                 if (saveGame != null)
                 {
                     saveGame.filePath = saveFileDialog.FileName;
                 }
-                else if (profile != null) 
+                else if (profile != null)
                 {
-                    profile.filePath = saveFileDialog.FileName; 
+                    profile.filePath = saveFileDialog.FileName;
                 }
             }
 
             SaveOpenedFile();
         }
 
-        private void DbgBtn_Click(object sender, RoutedEventArgs e) {
+        private void DbgBtn_Click(object sender, RoutedEventArgs e)
+        {
             dbgConsole.Show();
         }
 
         #endregion
 
-        private void AdonisWindow_Closed(object sender, EventArgs e) {
+        private void AdonisWindow_Closed(object sender, EventArgs e)
+        {
             Console.WriteLine("Closing program...");
 
             // Release the console writer on close to avoid memory issues
@@ -679,8 +738,10 @@ namespace BL3SaveEditor {
         }
 
         #region Theme Toggling
-        private void DarkModeBox_Checked(object sender, RoutedEventArgs e) {
-            if(bLaunched) {
+        private void DarkModeBox_Checked(object sender, RoutedEventArgs e)
+        {
+            if (bLaunched)
+            {
                 bool bChecked = (bool)((CheckBox)sender).IsChecked;
                 ResourceLocator.SetColorScheme(Application.Current.Resources, bChecked ? ResourceLocator.DarkColorScheme : ResourceLocator.LightColorScheme);
 
@@ -695,13 +756,16 @@ namespace BL3SaveEditor {
         #region Interactions
 
         #region General
-        private void RandomizeGUIDBtn_Click(object sender, RoutedEventArgs e) {
+        private void RandomizeGUIDBtn_Click(object sender, RoutedEventArgs e)
+        {
             Guid newGUID = Guid.NewGuid();
-            GUIDTextBox.Text = newGUID.ToString().Replace("-","").ToUpper();
+            GUIDTextBox.Text = newGUID.ToString().Replace("-", "").ToUpper();
         }
 
-        private void AdjustSaveLevelsBtn_Click(object sender, RoutedEventArgs e) {
-            OpenFileDialog fileDialog = new OpenFileDialog {
+        private void AdjustSaveLevelsBtn_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog fileDialog = new OpenFileDialog
+            {
                 Title = "Select BL3 Saves",
                 Filter = "BL3 Save (*.sav)|*.sav",
                 InitialDirectory = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "Borderlands 3", "Saved", "SaveGames"),
@@ -717,16 +781,20 @@ namespace BL3SaveEditor {
             if (!msgBox.Succeeded) return;
             level = msgBox.Result;
 
-            foreach(string file in fileDialog.FileNames) {
-                try {
-                    if (!(BL3Tools.BL3Tools.LoadFileFromDisk(file) is BL3Save save)) {
+            foreach (string file in fileDialog.FileNames)
+            {
+                try
+                {
+                    if (!(BL3Tools.BL3Tools.LoadFileFromDisk(file) is BL3Save save))
+                    {
                         Console.WriteLine("Read in file from \"{0}\"; Incorrect type: {1}");
                         continue;
                     }
                     save.Character.ExperiencePoints = PlayerXP.GetPointsForXPLevel(level);
                     BL3Tools.BL3Tools.WriteFileToDisk(save, false);
                 }
-                catch(Exception ex) {
+                catch (Exception ex)
+                {
                     Console.WriteLine("Failed to adjust level of save: \"{0}\"\n{1}", ex.Message, ex.StackTrace);
                 }
             }
@@ -734,9 +802,11 @@ namespace BL3SaveEditor {
         }
 
 
-        private void BackupAllSavesBtn_Click(object sender, RoutedEventArgs e) {
+        private void BackupAllSavesBtn_Click(object sender, RoutedEventArgs e)
+        {
             // Ask the user for all the saves to backup
-            OpenFileDialog fileDialog = new OpenFileDialog {
+            OpenFileDialog fileDialog = new OpenFileDialog
+            {
                 Title = "Backup BL3 Saves/Profiles",
                 Filter = "BL3 Save/Profile (*.sav)|*.sav",
                 InitialDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "Borderlands 3", "Saved", "SaveGames"),
@@ -745,7 +815,8 @@ namespace BL3SaveEditor {
             if (fileDialog.ShowDialog() != true) return;
 
             // Ask the user for a zip output
-            SaveFileDialog outDialog = new SaveFileDialog {
+            SaveFileDialog outDialog = new SaveFileDialog
+            {
                 Title = "Backup Outputs",
                 Filter = "ZIP file|*.zip",
                 InitialDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "Borderlands 3", "Saved", "SaveGames"),
@@ -754,15 +825,19 @@ namespace BL3SaveEditor {
             if (outDialog.ShowDialog() != true) return;
 
             Mouse.OverrideCursor = Cursors.Wait;
-            try {
+            try
+            {
                 // Finally back up all of the saves (using a ZIP because meh)
                 using (FileStream ms = new FileStream(outDialog.FileName, FileMode.Create))
-                using (ZipArchive archive = new ZipArchive(ms, ZipArchiveMode.Create)) {
-                    foreach (string path in fileDialog.FileNames) {
+                using (ZipArchive archive = new ZipArchive(ms, ZipArchiveMode.Create))
+                {
+                    foreach (string path in fileDialog.FileNames)
+                    {
                         string fileName = Path.GetFileName(path);
                         ZipArchiveEntry saveEntry = archive.CreateEntry(fileName, CompressionLevel.Optimal);
 
-                        using (BinaryWriter writer = new BinaryWriter(saveEntry.Open())) {
+                        using (BinaryWriter writer = new BinaryWriter(saveEntry.Open()))
+                        {
                             byte[] data = File.ReadAllBytes(path);
                             writer.Write(data);
                         }
@@ -771,7 +846,8 @@ namespace BL3SaveEditor {
 
                 Console.WriteLine("Backed up all saves: {0} to ZIP: {1}", string.Join(",", fileDialog.FileNames), outDialog.FileName);
             }
-            finally {
+            finally
+            {
                 // Make sure that in the event of an exception, that the mouse cursor gets restored (:
                 Mouse.OverrideCursor = null;
             }
@@ -780,19 +856,22 @@ namespace BL3SaveEditor {
         #endregion
 
         #region Character
-        private void CharacterClass_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+        private void CharacterClass_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
             var str = e.AddedItems.OfType<string>().FirstOrDefault();
             if (str == null || str == default) return;
         }
         #endregion
 
         #region Fast Travel
-        private void DbgMapBox_StateChange(object sender, RoutedEventArgs e) {
+        private void DbgMapBox_StateChange(object sender, RoutedEventArgs e)
+        {
             VisitedTeleportersGrpBox.DataContext = null;
             VisitedTeleportersGrpBox.DataContext = this;
         }
 
-        private void FastTravelChkBx_StateChanged(object sender, RoutedEventArgs e) {
+        private void FastTravelChkBx_StateChanged(object sender, RoutedEventArgs e)
+        {
             if (sender == null || saveGame == null) return;
             CheckBox senderBx = (CheckBox)sender;
             if (senderBx.Content.GetType() != typeof(TextBlock)) return;
@@ -800,31 +879,37 @@ namespace BL3SaveEditor {
             bool bFastTravelEnabled = senderBx.IsChecked == true;
             string fastTravelToChange = ((senderBx.Content as TextBlock).Text);
             string assetPath = DataPathTranslations.FastTravelTranslations.FirstOrDefault(x => x.Value == fastTravelToChange).Key;
-            
+
             Console.WriteLine("Changed state of {0} ({2}) to {1}", fastTravelToChange, bFastTravelEnabled, assetPath);
             int amtOfPlaythroughs = saveGame.Character.ActiveTravelStationsForPlaythroughs.Count - 1;
             int playthroughIndex = SelectedPlaythroughBox.SelectedIndex;
 
-            if (amtOfPlaythroughs < SelectedPlaythroughBox.SelectedIndex) {
+            if (amtOfPlaythroughs < SelectedPlaythroughBox.SelectedIndex)
+            {
                 saveGame.Character.ActiveTravelStationsForPlaythroughs.Add(new OakSave.PlaythroughActiveFastTravelSaveData());
             }
 
             var travelStations = saveGame.Character.ActiveTravelStationsForPlaythroughs[playthroughIndex].ActiveTravelStations;
-            if(bFastTravelEnabled) {
-                travelStations.Add(new OakSave.ActiveFastTravelSaveData() {
+            if (bFastTravelEnabled)
+            {
+                travelStations.Add(new OakSave.ActiveFastTravelSaveData()
+                {
                     ActiveTravelStationName = assetPath,
                     Blacklisted = false
                 });
             }
-            else {
+            else
+            {
                 travelStations.RemoveAll(x => x.ActiveTravelStationName == assetPath);
             }
 
             return;
         }
 
-        private void EnableAllTeleportersBtn_Click(object sender, RoutedEventArgs e) {
-            foreach (BoolStringPair bsp in TeleportersItmCntrl.Items) {
+        private void EnableAllTeleportersBtn_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (BoolStringPair bsp in TeleportersItmCntrl.Items)
+            {
                 ContentPresenter presenter = (ContentPresenter)TeleportersItmCntrl.ItemContainerGenerator.ContainerFromItem(bsp);
                 presenter.ApplyTemplate();
                 CheckBox chkBox = presenter.ContentTemplate.FindName("FastTravelChkBx", presenter) as CheckBox;
@@ -832,8 +917,10 @@ namespace BL3SaveEditor {
             }
         }
 
-        private void DisableAllTeleportersBtn_Click(object sender, RoutedEventArgs e) {
-            foreach (BoolStringPair bsp in TeleportersItmCntrl.Items) {
+        private void DisableAllTeleportersBtn_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (BoolStringPair bsp in TeleportersItmCntrl.Items)
+            {
                 ContentPresenter presenter = (ContentPresenter)TeleportersItmCntrl.ItemContainerGenerator.ContainerFromItem(bsp);
                 presenter.ApplyTemplate();
                 CheckBox chkBox = presenter.ContentTemplate.FindName("FastTravelChkBx", presenter) as CheckBox;
@@ -859,7 +946,8 @@ namespace BL3SaveEditor {
             BackpackListView.ItemsSource = items;
             //RefreshBackpackView();
         }
-        private void RefreshBackpackView() {
+        private void RefreshBackpackView()
+        {
             disableEvents = true;
             // Need to change the data context real quick to make the GUI update
             var grid = ((Grid)FindName("SerialContentsGrid"));
@@ -881,18 +969,20 @@ namespace BL3SaveEditor {
             //addPartBtn.DataContext = this;
 
         }
-        private void IntegerUpDown_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e) {
+        private void IntegerUpDown_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
             if (e.NewValue == null || e.OldValue == null) return;
             RefreshBackpackView();
         }
-        private void BackpackListView_Selected(object sender, EventArgs e) {
+        private void BackpackListView_Selected(object sender, EventArgs e)
+        {
             if (BackpackListView.Items.Count <= 1 || BackpackListView.SelectedValue == null) return;
             ListView listView = (sender as ListView);
             StringSerialPair svp = (StringSerialPair)listView.SelectedValue;
             SelectedSerial = svp.Val2;
-            
+
             // Scroll to the selected item (in case of duplication / etc)
-            if(!isSearch)
+            if (!isSearch)
             {
                 listView.ScrollIntoView(listView.SelectedItem);
             }
@@ -900,19 +990,21 @@ namespace BL3SaveEditor {
 
             RefreshBackpackView();
         }
-        private void BackpackListView_MouseWheel(object sender, MouseWheelEventArgs e) {
+        private void BackpackListView_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
             if (e.Handled) return;
 
             // This janky bit of logic allows us to scroll on hover over the items of the ListView as well :/
             var listview = (sender as ListView);
             var scrollViewer = listview.FindVisualChildren<ScrollViewer>().First();
             // Multiply the value by 0.7 because just the delta value can be a bit much tbh
-            scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - (e.Delta * 0.7) );
+            scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - (e.Delta * 0.7));
 
             // Make sure no other elements can handle the events
             e.Handled = true;
         }
-        private void NewItemBtn_Click(object sender, RoutedEventArgs e) {
+        private void NewItemBtn_Click(object sender, RoutedEventArgs e)
+        {
             string serialCode = "BL3(BAAAAACMlIA+GpCAEAAAIQAAAAAAwBkQAAA=)";
             Console.WriteLine("Pasting serial code: {0}", serialCode);
             try
@@ -979,10 +1071,12 @@ namespace BL3SaveEditor {
                 MessageBox.Show($"Error parsing serial: {ex.Message}", "Serial Parse Exception", AdonisUI.Controls.MessageBoxButton.OK, AdonisUI.Controls.MessageBoxImage.Error);
             }
         }
-        private void PasteCodeBtn_Click(object sender, RoutedEventArgs e) {
+        private void PasteCodeBtn_Click(object sender, RoutedEventArgs e)
+        {
             string serialCode = Clipboard.GetText();
             Console.WriteLine("Pasting serial code: {0}", serialCode);
-            try {
+            try
+            {
                 Borderlands3Serial item = Borderlands3Serial.DecryptSerial(serialCode);
                 if (item == null) return;
 
@@ -997,32 +1091,38 @@ namespace BL3SaveEditor {
                 var selectedValue = BackpackListView.Items.Cast<StringSerialPair>().Where(x => ReferenceEquals(x.Val2, item)).LastOrDefault();
                 BackpackListView.SelectedValue = selectedValue;
             }
-            catch(BL3Tools.BL3Tools.BL3Exceptions.SerialParseException ex) {
+            catch (BL3Tools.BL3Tools.BL3Exceptions.SerialParseException ex)
+            {
                 string message = ex.Message;
                 Console.WriteLine($"Exception ({message}) parsing serial: {ex.ToString()}");
                 if (ex.knowCause)
                     MessageBox.Show($"Error parsing serial: {ex.Message}", "Serial Parse Exception", AdonisUI.Controls.MessageBoxButton.OK, AdonisUI.Controls.MessageBoxImage.Error);
             }
-            catch(Exception ex) {
+            catch (Exception ex)
+            {
                 string message = ex.Message;
                 Console.WriteLine($"Exception ({message}) parsing serial: {ex.ToString()}");
                 MessageBox.Show($"Error parsing serial: {ex.Message}", "Serial Parse Exception", AdonisUI.Controls.MessageBoxButton.OK, AdonisUI.Controls.MessageBoxImage.Error);
             }
         }
-        private void SyncEquippedBtn_Click(object sender, RoutedEventArgs e) {
+        private void SyncEquippedBtn_Click(object sender, RoutedEventArgs e)
+        {
             if (saveGame == null) return;
             int levelToSync = PlayerXP.GetLevelForPoints(saveGame.Character.ExperiencePoints);
-            foreach(var equipData in saveGame.Character.EquippedInventoryLists) {
+            foreach (var equipData in saveGame.Character.EquippedInventoryLists)
+            {
                 if (!equipData.Enabled || equipData.InventoryListIndex < 0 || equipData.InventoryListIndex > saveGame.InventoryItems.Count - 1) continue;
-                
+
                 // Sync the level onto the item
                 saveGame.InventoryItems[equipData.InventoryListIndex].Level = levelToSync;
             }
             RefreshBackpackView();
         }
-        private void SyncAllBtn_Click(object sender, RoutedEventArgs e) {
+        private void SyncAllBtn_Click(object sender, RoutedEventArgs e)
+        {
             int levelToSync = -1;
-            if (profile != null) {
+            if (profile != null)
+            {
                 var msgBox = new Controls.IntegerMessageBox("Please enter a level to sync your items for syncing", "Level: ", 0, maximumXP, maximumXP);
                 msgBox.Owner = this;
                 msgBox.ShowDialog();
@@ -1030,17 +1130,19 @@ namespace BL3SaveEditor {
 
                 levelToSync = msgBox.Result;
             }
-            else 
+            else
                 levelToSync = PlayerXP.GetLevelForPoints(saveGame.Character.ExperiencePoints);
-            
-            foreach (Borderlands3Serial item in (profile == null ? saveGame.InventoryItems : profile.BankItems)) {
+
+            foreach (Borderlands3Serial item in (profile == null ? saveGame.InventoryItems : profile.BankItems))
+            {
                 Console.WriteLine($"Syncing level for item ({item.UserFriendlyName}) from {item.Level} to {levelToSync}");
                 item.Level = levelToSync;
             }
             RefreshBackpackView();
         }
-        
-        private void CopyItem_Executed(object sender, ExecutedRoutedEventArgs e) {
+
+        private void CopyItem_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
             StringSerialPair svp = (StringSerialPair)BackpackListView.SelectedValue;
             SelectedSerial = svp.Val2;
 
@@ -1051,15 +1153,128 @@ namespace BL3SaveEditor {
             // Copy it to the clipboard
             Clipboard.SetDataObject(serialString);
         }
-        private void PasteItem_Executed(object sender, ExecutedRoutedEventArgs e) {
+        private void PasteItem_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
             PasteCodeBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         }
-        private void DuplicateItem_Executed(object sender, ExecutedRoutedEventArgs e) {
+        private void DuplicateItem_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
             // This basically just clicks both the copy and paste button
             CopyItem_Executed(null, e);
             PasteCodeBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         }
-        private void DeleteBinding_Executed(object sender, ExecutedRoutedEventArgs e) {
+        private void DUMPCodeBtn_Click(object sender, RoutedEventArgs e)
+        {
+            // Create a SaveFileDialog instance
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                FileName = "ItemCodes", // Default file name
+                DefaultExt = ".txt", // Default file extension
+                Filter = "Text documents (.txt)|*.txt" // Filter files by extension
+            };
+
+            // Show save file dialog box
+            bool? result = saveFileDialog.ShowDialog();
+
+            // Process save file dialog box results
+            if (result == true)
+            {
+                // Save document
+                string filename = saveFileDialog.FileName;
+
+                // Assuming 'SlotItems' is accessible here and correctly typed
+                var slotItems = SlotItems; // Adapt this line to access SlotItems correctly in your context
+
+                // Call the method to dump SlotItems to file, passing the selected path
+                DumpSlotItemsToFile(slotItems.Cast<StringSerialPair>(), filename);
+            }
+        }
+        public void DumpSlotItemsToFile(IEnumerable<StringSerialPair> slotItems, string filePath)
+        {
+            using (var writer = new StreamWriter(filePath))
+            {
+                foreach (var item in slotItems)
+                {
+                    // Assuming each item has a property 'Code' or a method to get a code string
+                    writer.WriteLine(item.Val2.EncryptSerial(0)); // Or however you get the code from the item
+                }
+            }
+        }
+
+        // This method should be adjusted or implemented as previously described, 
+        // to serialize your SlotItems to a text format and write it to a file.
+        public void DumpSlotItemsToFile(IEnumerable<object> slotItems, string filePath)
+        {
+            // Implementation goes here
+        }
+
+        private void LoadDumpedCodes(string filePath)
+        {
+            try
+            {
+                var codes = File.ReadAllLines(filePath);
+
+                // Assuming you have a way to process these codes or directly assign them to a data structure
+                // For example, if you have a ListBox or similar control to display the codes:
+                foreach (var code in codes)
+                {
+                    // Process each code as needed, for example:
+                    // listBox.Items.Add(code);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to load codes from file. Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void LoadCodeBtn_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Text Files (*.txt)|*.txt|All files (*.*)|*.*"; // Adjust the filter as necessary
+            if (openFileDialog.ShowDialog() == true)
+            {
+                string filePath = openFileDialog.FileName;
+                try
+                {
+                    using (StreamReader sr = new StreamReader(filePath))
+                    {
+                        string line;
+                        while ((line = sr.ReadLine()) != null)
+                        {
+                            Console.WriteLine("Processing line: {0}", line);
+                            // Process each line as needed, similar to your clipboard example
+                            Borderlands3Serial item = Borderlands3Serial.DecryptSerial(line);
+                            if (item == null) continue; // Skip to next line if processing failed or item is null
+
+                            // Logic to add the item to the appropriate collection
+                            if (profile == null) saveGame.AddItem(item);
+                            else profile.BankItems.Add(item);
+
+                            // Since you're processing multiple items, consider refreshing the ListView outside the loop
+                        }
+                    }
+
+                    // Refresh your ListView or any other UI elements here, after all lines have been processed
+                    BackpackListView.ItemsSource = null;
+                    BackpackListView.ItemsSource = SlotItems;
+                    BackpackListView.Items.Refresh();
+                    RefreshBackpackView();
+                }
+                catch (BL3Tools.BL3Tools.BL3Exceptions.SerialParseException ex)
+                {
+                    Console.WriteLine($"Error parsing data from file: {ex.Message}");
+                    if (ex.knowCause)
+                        MessageBox.Show($"Error parsing data: {ex.Message}", "Data Parse Exception", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"General exception loading data: {ex.Message}");
+                    MessageBox.Show($"Error loading data: {ex.Message}", "Load Data Exception", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+        private void DeleteBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
             StringSerialPair svp = BackpackListView.SelectedValue as StringSerialPair;
             if (svp == null) return;
 
@@ -1068,12 +1283,14 @@ namespace BL3SaveEditor {
                 saveGame.InventoryItems.FindIndex(x => ReferenceEquals(x, svp.Val2)));
             if (saveGame == null)
                 profile.BankItems.RemoveAt(idx);
-            else {
+            else
+            {
 
                 // We need to preemptively adjust the equipped inventory lists so that way the equipped items stay consistent with the removed items.
                 //? Consider putting this into BL3Tools instead?
                 int eilIndex = saveGame.InventoryItems.FindIndex(x => ReferenceEquals(x, svp.Val2));
-                foreach (var vx in saveGame.Character.EquippedInventoryLists) {
+                foreach (var vx in saveGame.Character.EquippedInventoryLists)
+                {
                     if (vx.InventoryListIndex == eilIndex)
                         vx.InventoryListIndex = -1;
                     else if (vx.InventoryListIndex > eilIndex)
@@ -1081,7 +1298,8 @@ namespace BL3SaveEditor {
                 }
 
                 saveGame.DeleteItem(svp.Val2);
-                if (saveGame.InventoryItems.Count <= 0) {
+                if (saveGame.InventoryItems.Count <= 0)
+                {
                     SelectedSerial = null;
                 }
             }
@@ -1093,7 +1311,8 @@ namespace BL3SaveEditor {
         }
 
 
-        private void ChangeTypeBtn_Click(object sender, RoutedEventArgs e) {
+        private void ChangeTypeBtn_Click(object sender, RoutedEventArgs e)
+        {
             var itemKey = InventoryKeyDB.GetKeyForBalance(InventorySerialDatabase.GetBalanceFromShortName(SelectedBalance));
             var itemType = InventoryKeyDB.ItemTypeToKey.Where(x => x.Value.Contains(itemKey)).Select(x => x.Key).FirstOrDefault();
 
@@ -1102,7 +1321,8 @@ namespace BL3SaveEditor {
             changer.ShowDialog();
 
             // The user actually hit the save button and we have data about the item
-            if (changer.SelectedInventoryData != null) {
+            if (changer.SelectedInventoryData != null)
+            {
                 SelectedInventoryData = changer.SelectedInventoryData;
                 SelectedBalance = changer.SelectedBalance;
 
@@ -1110,7 +1330,8 @@ namespace BL3SaveEditor {
                 RefreshBackpackView();
             }
         }
-        private void AddItemPartBtn_Click(object sender, RoutedEventArgs e) {
+        private void AddItemPartBtn_Click(object sender, RoutedEventArgs e)
+        {
             if (SelectedSerial == null) return;
 
             var btn = (Button)sender;
@@ -1134,7 +1355,8 @@ namespace BL3SaveEditor {
             obj.GetBindingExpression(ListView.ItemsSourceProperty).UpdateTarget();
             RefreshBackpackView();
         }
-        private void DeleteItemPartBtn_Click(object sender, RoutedEventArgs e) {
+        private void DeleteItemPartBtn_Click(object sender, RoutedEventArgs e)
+        {
             var btn = (Button)sender;
             ListView obj = ((ListView)FindName(btn.Name.Replace("DelBtn", "") + "ListView"));
 
@@ -1143,16 +1365,21 @@ namespace BL3SaveEditor {
 
             List<string> parts = (List<string>)SelectedSerial.GetType().GetProperty(propertyName).GetValue(SelectedSerial, null);
 
-            if (obj.SelectedIndex != -1) {
+            if (obj.SelectedIndex != -1)
+            {
                 var longName = parts[obj.SelectedIndex];
-                if (ForceLegitParts) {
-                    foreach (string part in parts) {
+                if (ForceLegitParts)
+                {
+                    foreach (string part in parts)
+                    {
                         List<string> dependencies = InventorySerialDatabase.GetDependenciesForPart(part);
-                        if (part != longName && dependencies.Contains(longName)) {
+                        if (part != longName && dependencies.Contains(longName))
+                        {
                             var result = MessageBox.Show("Are you sure you want to delete this part? If you do that, you'll make the item illegitimate.", "Are you sure?", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
 
-                            if(result == MessageBoxResult.No) return;
-                            else {
+                            if (result == MessageBoxResult.No) return;
+                            else
+                            {
                                 // Update the force legit text box because they clearly don't want legit items :P
                                 ForceLegitParts = false;
                                 ForceLegitPartsChkBox.DataContext = null;
@@ -1175,13 +1402,15 @@ namespace BL3SaveEditor {
         }
 
         // This bit of logic is here so that way the ListView's selected value stays up to date with the combobox's selected value :/
-        private void ComboBox_DropDownChanged(object sender, EventArgs e) {
+        private void ComboBox_DropDownChanged(object sender, EventArgs e)
+        {
             ComboBox box = ((ComboBox)sender);
             ListView parent = box.FindParent<ListView>();
             if (parent == null) return;
             parent.SelectedValue = box.SelectedValue;
         }
-        private string GetSelectedPart(string type, object sender, SelectionChangedEventArgs e) {
+        private string GetSelectedPart(string type, object sender, SelectionChangedEventArgs e)
+        {
             if (e.Handled || e.RemovedItems.Count < 1) return null;
             ComboBox box = ((ComboBox)sender);
 
@@ -1201,7 +1430,8 @@ namespace BL3SaveEditor {
 
             return fullName;
         }
-        private void ItemPart_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+        private void ItemPart_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
             ListView parent = ((ComboBox)sender).FindParent<ListView>();
             if (parent == null) return;
             string propertyName = parent.Name.Split(new string[] { "ListView" }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
@@ -1215,11 +1445,13 @@ namespace BL3SaveEditor {
             // The selected index stays updated with the current combobox because of "ComboBox_DropDownChanged".
             parts[parent.SelectedIndex] = fullName;
 
-            if(ForceLegitParts) {
+            if (ForceLegitParts)
+            {
                 List<string> dependantParts = InventorySerialDatabase.GetDependenciesForPart(fullName);
                 if (dependantParts == null || dependantParts?.Count == 0) return;
                 if (parts.Any(x => dependantParts.Contains(x))) return;
-                else {
+                else
+                {
                     // Pick the first dependant part; This might not be what the user actually wants but ssh
                     parts.Add(dependantParts.FirstOrDefault());
                     RefreshBackpackView();
@@ -1235,10 +1467,14 @@ namespace BL3SaveEditor {
         /// This was way more of an issue in earlier releases of BL3 but we're keeping to be safe.
         /// </summary>
         /// <param name="files">A list of all of the save files to modify / inject into</param>
-        private void InjectGuardianRank(string[] files) {
-            foreach (string file in files) {
-                try {
-                    if (!(BL3Tools.BL3Tools.LoadFileFromDisk(file) is BL3Save save)) {
+        private void InjectGuardianRank(string[] files)
+        {
+            foreach (string file in files)
+            {
+                try
+                {
+                    if (!(BL3Tools.BL3Tools.LoadFileFromDisk(file) is BL3Save save))
+                    {
                         Console.WriteLine("Reading in file from \"{0}\"; Incorrect type: {1}");
                         continue;
                     }
@@ -1248,10 +1484,13 @@ namespace BL3SaveEditor {
                     grcd.NewGuardianExperience = profile.Profile.GuardianRank.NewGuardianExperience;
                     grcd.GuardianRewardRandomSeed = profile.Profile.GuardianRank.GuardianRewardRandomSeed;
                     List<OakSave.GuardianRankRewardCharacterSaveGameData> zeroedGRRanks = new List<OakSave.GuardianRankRewardCharacterSaveGameData>();
-                    foreach (var grData in grcd.RankRewards) {
+                    foreach (var grData in grcd.RankRewards)
+                    {
                         bool bFoundMatch = false;
-                        foreach (var pGRData in profile.Profile.GuardianRank.RankRewards) {
-                            if (pGRData.RewardDataPath.Equals(grData.RewardDataPath)) {
+                        foreach (var pGRData in profile.Profile.GuardianRank.RankRewards)
+                        {
+                            if (pGRData.RewardDataPath.Equals(grData.RewardDataPath))
+                            {
                                 grData.NumTokens = pGRData.NumTokens;
                                 if (grData.NumTokens == 0)
                                     zeroedGRRanks.Add(grData);
@@ -1268,17 +1507,21 @@ namespace BL3SaveEditor {
 
                     BL3Tools.BL3Tools.WriteFileToDisk(save, false);
                 }
-                catch (Exception ex) {
+                catch (Exception ex)
+                {
                     Console.WriteLine("Failed to inject guardian rank into save: \"{0}\"\n{1}", ex.Message, ex.StackTrace);
                 }
-                finally {
+                finally
+                {
                     Console.WriteLine("Completed injecting guardian rank into saves...");
                 }
             }
         }
-        private void InjectGRBtn_Click(object sender, RoutedEventArgs e) {
+        private void InjectGRBtn_Click(object sender, RoutedEventArgs e)
+        {
             // Ask the user for all the saves to inject into
-            OpenFileDialog fileDialog = new OpenFileDialog {
+            OpenFileDialog fileDialog = new OpenFileDialog
+            {
                 Title = "Select saves to inject into",
                 Filter = "BL3 Save/Profile (*.sav)|*.sav",
                 InitialDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "Borderlands 3", "Saved", "SaveGames"),
@@ -1288,23 +1531,29 @@ namespace BL3SaveEditor {
 
             InjectGuardianRank(fileDialog.FileNames);
         }
-        private void ClearLLBtn_Click(object sender, RoutedEventArgs e) {
+        private void ClearLLBtn_Click(object sender, RoutedEventArgs e)
+        {
             if (profile == null) return;
             profile.LostLootItems.Clear();
         }
-        private void ClearBankBtn_Click(object sender, RoutedEventArgs e) {
+        private void ClearBankBtn_Click(object sender, RoutedEventArgs e)
+        {
             if (profile == null) return;
             profile.BankItems.Clear();
         }
 
         #region Customization Unlockers/Lockers
 
-        private void UnlockRoomDeco_Click(object sender, RoutedEventArgs e) {
+        private void UnlockRoomDeco_Click(object sender, RoutedEventArgs e)
+        {
             List<string> decos = DataPathTranslations.decoAssetPaths.Keys.ToList();
-            foreach(string assetPath in decos) {
+            foreach (string assetPath in decos)
+            {
                 // Only add asset paths that we don't already have unlocked
-                if(!profile.Profile.UnlockedCrewQuartersDecorations.Any(x => x.DecorationItemAssetPath.Equals(assetPath))) {
-                    var d = new OakSave.CrewQuartersDecorationItemSaveGameData() {
+                if (!profile.Profile.UnlockedCrewQuartersDecorations.Any(x => x.DecorationItemAssetPath.Equals(assetPath)))
+                {
+                    var d = new OakSave.CrewQuartersDecorationItemSaveGameData()
+                    {
                         DecorationItemAssetPath = assetPath,
                         IsNew = true
                     };
@@ -1313,18 +1562,22 @@ namespace BL3SaveEditor {
                 }
             }
         }
-        private void UnlockCustomizations_Click(object sender, RoutedEventArgs e) {
+        private void UnlockCustomizations_Click(object sender, RoutedEventArgs e)
+        {
             List<string> customizations = new List<string>();
             customizations.AddRange(DataPathTranslations.headAssetPaths.Keys.ToList());
             customizations.AddRange(DataPathTranslations.skinAssetPaths.Keys.ToList());
             customizations.AddRange(DataPathTranslations.echoAssetPaths.Keys.ToList());
 
-            foreach(string assetPath in customizations) {
+            foreach (string assetPath in customizations)
+            {
                 string lowerAsset = assetPath.ToLower();
                 if (lowerAsset.Contains("default") || (lowerAsset.Contains("emote") && (lowerAsset.Contains("wave") || lowerAsset.Contains("cheer") || lowerAsset.Contains("laugh") || lowerAsset.Contains("point")))) continue;
 
-                if (!profile.Profile.UnlockedCustomizations.Any(x => x.CustomizationAssetPath.Equals(assetPath))) {
-                    var d = new OakSave.OakCustomizationSaveGameData {
+                if (!profile.Profile.UnlockedCustomizations.Any(x => x.CustomizationAssetPath.Equals(assetPath)))
+                {
+                    var d = new OakSave.OakCustomizationSaveGameData
+                    {
                         CustomizationAssetPath = assetPath,
                         IsNew = true
                     };
@@ -1336,9 +1589,12 @@ namespace BL3SaveEditor {
             List<uint> assetHashes = new List<uint>();
             assetHashes.AddRange(DataPathTranslations.weaponSkinHashes);
             assetHashes.AddRange(DataPathTranslations.trinketHashes);
-            foreach (uint assetHash in assetHashes) {
-                if(!profile.Profile.UnlockedInventoryCustomizationParts.Any(x => x.CustomizationPartHash == assetHash)) {
-                    profile.Profile.UnlockedInventoryCustomizationParts.Add(new OakSave.OakInventoryCustomizationPartInfo {
+            foreach (uint assetHash in assetHashes)
+            {
+                if (!profile.Profile.UnlockedInventoryCustomizationParts.Any(x => x.CustomizationPartHash == assetHash))
+                {
+                    profile.Profile.UnlockedInventoryCustomizationParts.Add(new OakSave.OakInventoryCustomizationPartInfo
+                    {
                         CustomizationPartHash = assetHash,
                         IsNew = true
                     });
@@ -1346,11 +1602,13 @@ namespace BL3SaveEditor {
             }
         }
 
-        private void LockRoomDeco_Click(object sender, RoutedEventArgs e) {
+        private void LockRoomDeco_Click(object sender, RoutedEventArgs e)
+        {
             // Remove all of the customizations in order to "lock" them.
             profile.Profile.UnlockedCrewQuartersDecorations.Clear();
         }
-        private void LockCustomizations_Click(object sender, RoutedEventArgs e) {
+        private void LockCustomizations_Click(object sender, RoutedEventArgs e)
+        {
             profile.Profile.UnlockedCustomizations.Clear();
             profile.Profile.UnlockedInventoryCustomizationParts.Clear();
         }
@@ -1359,7 +1617,8 @@ namespace BL3SaveEditor {
         #endregion
 
         #region About
-        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e) {
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
             Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
             e.Handled = true;
         }
@@ -1367,44 +1626,57 @@ namespace BL3SaveEditor {
 
         #endregion
 
-        private void AutoUpdaterOnCheckForUpdateEvent(UpdateInfoEventArgs args) {
-            if(args.Error == null) {
-                if(args.IsUpdateAvailable) {
+        private void AutoUpdaterOnCheckForUpdateEvent(UpdateInfoEventArgs args)
+        {
+            if (args.Error == null)
+            {
+                if (args.IsUpdateAvailable)
+                {
                     MessageBoxResult result;
-                    if(args.Mandatory.Value) {
+                    if (args.Mandatory.Value)
+                    {
                         result = MessageBox.Show($@"There is a new version {args.CurrentVersion} available. This update is required. Press OK to begin updating.", "Update Available", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
-                    else {
+                    else
+                    {
                         result = MessageBox.Show($@"There is a new version {args.CurrentVersion} available. You're using version {args.InstalledVersion}. Do you want to update now?", "Update Available", MessageBoxButton.YesNo, MessageBoxImage.Information);
                     }
 
-                    if (result.Equals(MessageBoxResult.Yes) || result.Equals(MessageBoxResult.OK)) {
-                        try {
+                    if (result.Equals(MessageBoxResult.Yes) || result.Equals(MessageBoxResult.OK))
+                    {
+                        try
+                        {
 #if !SINGLE_FILE
                             // Change what we're doing depending on whether or not we're built in single file (1 exe in a zip) or "release" (distributed as a zip with multiple files & folders).
                             args.DownloadURL = args.DownloadURL.Replace("-Portable", "");
 #endif
-                            if (AutoUpdater.DownloadUpdate(args)) {
+                            if (AutoUpdater.DownloadUpdate(args))
+                            {
                                 Application.Current.Shutdown();
                             }
                         }
-                        catch (Exception exception) {
+                        catch (Exception exception)
+                        {
                             MessageBox.Show(exception.Message, exception.GetType().ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
                         }
                     }
                 }
             }
-            else {
-                if (args.Error is System.Net.WebException) {
+            else
+            {
+                if (args.Error is System.Net.WebException)
+                {
                     MessageBox.Show("There is a problem reaching update server. Please check your internet connection and try again later.", "Update Check Failed", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
-                else {
+                else
+                {
                     MessageBox.Show(args.Error.Message, args.Error.GetType().ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
 
-        private void UpdateButton_Click(object sender, RoutedEventArgs e) {
+        private void UpdateButton_Click(object sender, RoutedEventArgs e)
+        {
             //AutoUpdater.Start(UpdateURL);
         }
 
@@ -1412,7 +1684,7 @@ namespace BL3SaveEditor {
         private void AddPart(string part, bool isGeneric = false)
         {
             if (SelectedSerial == null) return;
-            
+
             var parts = isGeneric ? SelectedSerial.GenericParts : SelectedSerial.Parts;
             if (isGeneric && parts.Count == 15)
                 return;
@@ -1421,7 +1693,7 @@ namespace BL3SaveEditor {
             parts.Add(InventorySerialDatabase.GetPartFromShortName(isGeneric ? "InventoryGenericPartData" : SelectedSerial.InventoryKey, part));
 
             // Update the valid parts
-            if(isGeneric)
+            if (isGeneric)
             {
                 RaisePropertyChanged(nameof(ValidGenerics));
             }
@@ -1429,7 +1701,7 @@ namespace BL3SaveEditor {
             {
                 RaisePropertyChanged(nameof(ValidParts));
             }
-            
+
             RefreshBackpackView();
         }
 
@@ -1467,7 +1739,7 @@ namespace BL3SaveEditor {
 
         private void PartsOnRemove(object sender, MouseButtonEventArgs e)
         {
-            if(!IsReorder)
+            if (!IsReorder)
             {
                 var allowEvent = !disableEvents;
                 if (sender is ListView view && allowEvent)
@@ -1498,7 +1770,7 @@ namespace BL3SaveEditor {
             var isGeneric = true;
             var index = -1;
             ListView view;
-            if(ListViewSelectedParts.IsVisible)
+            if (ListViewSelectedParts.IsVisible)
             {
                 isGeneric = false;
                 index = ListViewSelectedParts.SelectedIndex;
@@ -1538,7 +1810,7 @@ namespace BL3SaveEditor {
                 view = ListViewSelectedGenerics;
             }
             var parts = isGeneric ? SelectedSerial.GenericParts : SelectedSerial.Parts;
-            if (index < (parts.Count-1))
+            if (index < (parts.Count - 1))
             {
                 var previous = parts[index + 1];
                 parts[index + 1] = view.SelectedValue.ToString();
@@ -1636,6 +1908,196 @@ namespace BL3SaveEditor {
             return vx;
         }
 
+        private void TabCntrl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void ImportMissionsBtn_Click(object sender, RoutedEventArgs e)
+        {
+            // Reuse the platform filters defined previously
+            Dictionary<Platform, string> PlatformFilters = new Dictionary<Platform, string>() {
+        { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|JSON Save (*.json)|*.json" },
+        { Platform.PS4, "PS4 BL3 Save/Profile (*.*)|*.*" }
+    };
+
+            OpenFileDialog fileDialog = new OpenFileDialog
+            {
+                Title = "Select BL3 Save to Import Missions From",
+                Filter = string.Join("|", PlatformFilters.Values),
+                InitialDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "Borderlands 3", "Saved", "SaveGames"),
+            };
+
+            if (fileDialog.ShowDialog() == true)
+            {
+                Platform platform = fileDialog.FilterIndex <= 2 ? Platform.PC : Platform.PS4;
+                ImportMissionsFromFile(fileDialog.FileName, platform);
+            }
+        }
+
+        private void ImportMissionsFromFile(string filePath, Platform platform)
+        {
+            var importSave = BL3Tools.BL3Tools.LoadFileFromDisk(filePath, platform) as BL3Save;
+
+            if (importSave != null && saveGame != null && importSave.Character != null && saveGame.Character != null)
+            {
+                // Directly copy mission data from the imported save to the current saveGame
+                saveGame.Character.MissionPlaythroughsDatas = new List<OakSave.MissionPlaythroughSaveGameData>(importSave.Character.MissionPlaythroughsDatas);
+
+                SaveModifiedSaveGame();
+            }
+        }
+
+        private void ImportChallengesBtn_Click(object sender, RoutedEventArgs e)
+        {
+            Dictionary<Platform, string> PlatformFilters = new Dictionary<Platform, string>() {
+        { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|JSON Save (*.json)|*.json" },
+        { Platform.PS4, "PS4 BL3 Save/Profile (*.*)|*.*" }
+    };
+
+            OpenFileDialog fileDialog = new OpenFileDialog
+            {
+                Title = "Select BL3 Save to Import Challenges From",
+                Filter = string.Join("|", PlatformFilters.Values),
+                InitialDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "Borderlands 3", "Saved", "SaveGames"),
+            };
+
+            if (fileDialog.ShowDialog() == true)
+            {
+                Platform platform = fileDialog.FilterIndex <= 2 ? Platform.PC : Platform.PS4;
+                ImportChallengesFromFile(fileDialog.FileName, platform);
+            }
+        }
+
+        private void ImportChallengesFromFile(string filePath, Platform platform)
+        {
+            var importSave = BL3Tools.BL3Tools.LoadFileFromDisk(filePath, platform) as BL3Save;
+
+            if (importSave != null && saveGame != null && importSave.Character != null && saveGame.Character != null)
+            {
+                saveGame.Character.ChallengeDatas = new List<OakSave.ChallengeSaveGameData>(importSave.Character.ChallengeDatas);
+
+                saveGame.Character.ChallengeCategoryCompletionPcts = new OakSave.ChallengeCategoryProgressSaveData
+                {
+                    CategoryProgress = (byte[])importSave.Character.ChallengeCategoryCompletionPcts.CategoryProgress.Clone()
+                };
+
+                SaveModifiedSaveGame();
+            }
+        }
+
+        private void ImportSkillTreeBtn_Click(object sender, RoutedEventArgs e)
+        {
+            Dictionary<Platform, string> PlatformFilters = new Dictionary<Platform, string>() {
+        { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|JSON Save (*.json)|*.json" },
+        { Platform.PS4, "PS4 BL3 Save/Profile (*.*)|*.*" }
+    };
+
+            OpenFileDialog fileDialog = new OpenFileDialog
+            {
+                Title = "Select BL3 Save to Import Skill Trees From",
+                Filter = string.Join("|", PlatformFilters.Values),
+                InitialDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "Borderlands 3", "Saved", "SaveGames"),
+            };
+
+            if (fileDialog.ShowDialog() == true)
+            {
+                Platform platform = fileDialog.FilterIndex <= 2 ? Platform.PC : Platform.PS4;
+                ImportSkillTreesFromFile(fileDialog.FileName, platform);
+            }
+        }
+
+        private void ImportSkillTreesFromFile(string filePath, Platform platform)
+        {
+            var importSave = BL3Tools.BL3Tools.LoadFileFromDisk(filePath, platform) as BL3Save;
+
+            if (importSave != null && saveGame != null && importSave.Character != null && saveGame.Character != null)
+            {
+                saveGame.Character.AbilityData = new OakPlayerAbilitySaveGameData
+                {
+                    AbilityPoints = importSave.Character.AbilityData.AbilityPoints,
+                    TreeItemLists = new List<OakAbilityTreeItemSaveGameData>(importSave.Character.AbilityData.TreeItemLists),
+                    AbilitySlotLists = new List<OakAbilitySlotSaveGameData>(importSave.Character.AbilityData.AbilitySlotLists),
+                    AugmentSlotLists = new List<OakActionAbilityAugmentSaveGameData>(importSave.Character.AbilityData.AugmentSlotLists),
+                    AugmentConfigurationLists = new List<OakActionAbilityAugmentConfigurationSaveGameData>(importSave.Character.AbilityData.AugmentConfigurationLists),
+                    TreeGrade = importSave.Character.AbilityData.TreeGrade
+                };
+
+                SaveModifiedSaveGame();
+            }
+        }
+
+        private void ImportRegionsBtn_Click(object sender, RoutedEventArgs e)
+        {
+            Dictionary<Platform, string> PlatformFilters = new Dictionary<Platform, string>() {
+        { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|JSON Save (*.json)|*.json" },
+        { Platform.PS4, "PS4 BL3 Save/Profile (*.*)|*.*" }
+    };
+
+            OpenFileDialog fileDialog = new OpenFileDialog
+            {
+                Title = "Select BL3 Save to Import Regions From",
+                Filter = string.Join("|", PlatformFilters.Values),
+                InitialDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "Borderlands 3", "Saved", "SaveGames"),
+            };
+
+            if (fileDialog.ShowDialog() == true)
+            {
+                Platform platform = fileDialog.FilterIndex <= 2 ? Platform.PC : Platform.PS4;
+                ImportRegionsFromFile(fileDialog.FileName, platform);
+            }
+        }
+
+        private void ImportRegionsFromFile(string filePath, Platform platform)
+        {
+            var importSave = BL3Tools.BL3Tools.LoadFileFromDisk(filePath, platform) as BL3Save;
+
+            if (importSave != null && saveGame != null && importSave.Character != null && saveGame.Character != null)
+            {
+                saveGame.Character.SavedRegions = new List<OakSave.RegionSaveGameData>(importSave.Character.SavedRegions);
+
+                SaveModifiedSaveGame();
+            }
+        }
+
+        private void SaveModifiedSaveGame()
+        {
+            try
+            {
+
+                MessageBox.Show("Please save and reload the save to see changes!", "Data Imported!", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to save the game: {ex.Message}", "Save Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private void UpdateGameStages_Click(object sender, RoutedEventArgs e)
+        {
+            if (UniversalGameStageUpDown.Value.HasValue)
+            {
+                UpdateGameStageForAllRegions(UniversalGameStageUpDown.Value.Value);
+            }
+        }
+
+        private void UpdateGameStageForAllRegions(int newGameStage)
+        {
+            if (saveGame != null && saveGame.Character != null && saveGame.Character.SavedRegions != null)
+            {
+                foreach (var region in saveGame.Character.SavedRegions)
+                {
+                    region.GameStage = newGameStage;
+                }
+                // Changes are applied in memory but not saved to disk yet.
+                RegionsDataGrid.Items.Refresh();
+            }
+        }
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
 
@@ -1643,7 +2105,7 @@ namespace BL3SaveEditor {
 
         private void PropertyGrid_PreparePropertyItem(object sender, Xceed.Wpf.Toolkit.PropertyGrid.PropertyItemEventArgs e)
         {
-            
+
         }
 
         private void LootlemonView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1653,57 +2115,46 @@ namespace BL3SaveEditor {
 
         private ICommand _importCommand;
 
-
-        public ICommand ImportCommand
+        public class DelegateCommand : ICommand
         {
-            get
-            {
-                if (_importCommand == null) _importCommand = new DelegateCommand(ImportBtn_Click);
+            public event EventHandler CanExecuteChanged;
+            private Action<object> action;
 
-                return _importCommand;
+            public DelegateCommand(Action<object> action)
+            {
+                this.action = action;
             }
-        }
-        private void ImportBtn_Click(object itemToImport)
-        {
-            _itemToImport = itemToImport as StringSerialPair;
-            if (_itemToImport != null)
+            public bool CanExecute(object parameter)
             {
-                if (profile == null) saveGame.AddItem(_itemToImport.Val2);
-                else profile.BankItems.Add(_itemToImport.Val2);
+                return true;
+            }
 
-                BackpackListView.ItemsSource = null;
-                BackpackListView.ItemsSource = SlotItems;
+            public void Execute(object parameter)
+            {
+                action.Invoke(parameter);
             }
         }
 
-        private void TabCntrl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
 
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void ApplyGameStageToAllRegions_Click(object sender, RoutedEventArgs e)
         {
+            if (UniversalGameStageUpDown.Value is int newGameStage)
+            {
+                if (saveGame?.Character?.SavedRegions != null)
+                {
+                    foreach (var region in saveGame.Character.SavedRegions)
+                    {
+                        region.GameStage = newGameStage;
+                    }
 
-        }
-    }
-
-    public class DelegateCommand : ICommand
-    {
-        public event EventHandler CanExecuteChanged;
-        private Action<object> action;
-
-        public DelegateCommand(Action<object> action)
-        {
-            this.action = action;
-        }
-        public bool CanExecute(object parameter)
-        {
-            return true;
-        }
-
-        public void Execute(object parameter)
-        {
-            action.Invoke(parameter);
+                    SaveModifiedSaveGame();
+                    RegionsDataGrid.Items.Refresh();
+                }
+            }
         }
     }
 }
