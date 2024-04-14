@@ -174,7 +174,6 @@
                         Margin="0,143,649,0" VerticalAlignment="Top" RenderTransformOrigin="2.353,0.208"
                         HorizontalAlignment="Right" Width="131"
                         ToolTip="Imports Region Data From Another Save" />
-
                 </Grid>
             </TabItem>
             <TabItem IsEnabled="{Binding SaveGameLoaded, TargetNullValue=False}">
@@ -280,9 +279,6 @@
                             <Label FontWeight="Normal" VerticalAlignment="Top" Content="Color 2: "
                                     VerticalContentAlignment="Center" HorizontalContentAlignment="Left"
                                     Margin="11,124,0,0" HorizontalAlignment="Left" Width="55" Height="22" />
-                            <Label FontWeight="Normal" VerticalAlignment="Top" Content="Color 3: "
-                                    VerticalContentAlignment="Center" HorizontalContentAlignment="Left"
-                                    Margin="11,151,0,0" HorizontalAlignment="Left" Width="55" Height="22" />
                             <xctk:ColorPicker VerticalAlignment="Top" UsingAlphaChannel="True"
                                     ToolTip="Sadly BL3 doesn't support RGB for colors; It will be converted to what BL3 considers the closest color."
                                     Margin="155,125,0,0" RenderTransformOrigin="0.455,0.826"
@@ -295,6 +291,9 @@
                                     IsEnabled="{Binding bSaveLoaded}"
                                     SelectedColor="{Binding saveGame.Character.SelectedColorCustomizations[2], ConverterParameter=*Color_Tertiary1, Converter={StaticResource CustomPlayerColorToColorConverter1}, Mode=TwoWay}"
                                     HorizontalAlignment="Left" Width="271" />
+                            <Label FontWeight="Normal" VerticalAlignment="Top" Content="Color 4: "
+                                VerticalContentAlignment="Center" HorizontalContentAlignment="Left"
+                                Margin="11,151,0,0" HorizontalAlignment="Left" Width="55" Height="22" />
                         </Grid>
                     </Expander>
                     <Expander HorizontalAlignment="Right" Header="Unlocks" Margin="0,102,5,182" IsExpanded="True"
@@ -347,6 +346,9 @@
                                     ToolTip="Amount of eridium you currently have" Minimum="0" />
                         </Grid>
                     </Expander>
+                    <Label FontWeight="Normal" VerticalAlignment="Top" Content="At this time the data translations needs to be completely updated and is&#xA;not working in this moment but should in a future update.&#xA;&#xA;Please be patient as this will be a large overhall and eventually make the editor&#xA;run faster in the long run. There is a &quot;customization editor&quot; in the raw tab...."
+                                    VerticalContentAlignment="Center" HorizontalContentAlignment="Left"
+                                    Margin="20,408,0,0" HorizontalAlignment="Left" Width="436" Height="127" />
 
                 </Grid>
             </TabItem>
@@ -1037,11 +1039,12 @@
 
                                             <DataTemplate x:Key="ReorderTemplate">
                                                 <StackPanel Orientation="Horizontal" Height="30">
+                                                    <CheckBox x:Name="DisableConfirmationCheckbox" Content="No Confirmation" Margin="5" Checked="DisableConfirmationCheckbox_Checked" Unchecked="DisableConfirmationCheckbox_Unchecked"/>
                                                     <CheckBox Margin="0,0,5,0" Content="Reorder Parts" IsChecked="{Binding  RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MainWindow}}, Path=IsReorder}"></CheckBox>
-                                                    <Button Click="upBtn_Click" Name="upBtn" MinWidth="70">Up</Button>
-                                                    <Button Click="downBtn_Click" Name="downBtn" MinWidth="70">Down</Button>
-                                                    <Button Click="topBtn_Click" Name="topBtn" MinWidth="70">Top</Button>
-                                                    <Button Click="bottomBtn_Click" Name="bottomBtn" MinWidth="70">Bottom</Button>
+                                                    <Button Click="upBtn_Click" Name="upBtn" MinWidth="60">Up</Button>
+                                                    <Button Click="downBtn_Click" Name="downBtn" MinWidth="60">Down</Button>
+                                                    <Button Click="topBtn_Click" Name="topBtn" MinWidth="60">Top</Button>
+                                                    <Button Click="bottomBtn_Click" Name="bottomBtn" MinWidth="60">Bottom</Button>
                                                 </StackPanel>
                                             </DataTemplate>
                                         </TabControl.Resources>
@@ -1365,7 +1368,7 @@ AutoGenerateProperties="True" Style="{StaticResource PropertyGridStyle}">
                                     <GradientStop Color="Red" Offset="0"/>
                                     <GradientStop Color="Gold" Offset="1.15"/>
                                 </LinearGradientBrush>
-                            </Hyperlink.Foreground><Run Text="FromDarkHell"/></Hyperlink><LineBreak/><LineBreak/><Run Text="Thanks to: "/><LineBreak/><Run Text="- Gibbed, apocalyptech, raptor/cfi2017, c0dycode, apple1417, LostInCompression, DOMIN8"/><LineBreak/><Run Text="Extra special thanks to"/><Run Text=" "/><Hyperlink NavigateUri="https://www.deviantart.com/brokennoah/art/Borderlands-3-icons-797030087" TextDecorations="Underline"><Run Text="BrokenNoah"/></Hyperlink><Run Text=" "/><Run Text="for making the main icon of this program!"/><LineBreak/><Run Text="Without their help, this program would not exist."/><LineBreak/><LineBreak/><Run Text="Of course, thanks to Gearbox Software for creating this game!"/><LineBreak/><Run Text="If you wish to support me financially, you can support me via"/><Run Text=" "/><Hyperlink NavigateUri="https://ko-fi.com/fromdarkhell"><Run Text="ko-fi" TextDecorations="Underline"/></Hyperlink><Run Text=" "/><Run Text="or"/><Run Text=" "/><Hyperlink NavigateUri="https://www.patreon.com/fromdarkhell"><Run Text="Patreon" TextDecorations="Underline"/></Hyperlink><LineBreak/><LineBreak/><LineBreak/><LineBreak/><Run Text="This Editor has been modified by ProtoBuffers!!"/><LineBreak/><Run Text="to support PS4 Save Wizard Saves and BL3-CLI JSON Saves!"/><LineBreak/><Run/><LineBreak/><Run/><LineBreak/><Run Text="Unlocked Raw Tab to allow for more customization within saves.    [1st release]"/><LineBreak/><Run Text="Updated Inventory UI to have a similar aesthetic to the zakism editor.     [1st release]"/><LineBreak/><Run Text="Added New buttons for Save/Profile for those who want to start with a fresh save. [1-29-24]"/><LineBreak/><Run Text="Added the ability to edit Vault Key 1-3 Values in Profile tab.    [1-29-24]"/><LineBreak/><Run Text="Added Editable XP value in General Tab for easy access.    [2-8-24]"/><LineBreak/><Run Text="Fixed XP from being 1 xp off at level 72.    [2-22-24]"/><LineBreak/><Run Text="Fixed Items from not saving properly when generating from new item button.    [2-22-24]"/><LineBreak/><Run Text="Added Region Data and Skill Tree Tabs, import button from other saves, Import/Export Weapons/Items [3-16-24]"/><LineBreak/><LineBreak/><LineBreak/><Run Text="To load your JSON save change platform in the bottom right of the open save selection box."/><LineBreak/><Run Text="To Save as PC change your platform between PC/PS4 in the general tab then after pressing save as change the save type to JSON."/><LineBreak/><Run/><LineBreak/><Run Text="TO NOT GET AN ERROR IN SAVE WIZARD IMPORT  OPEN THE JSON SAVE IN A JSON EDITOR OR A TEXT EDITOR LIKE NOTEPAD THEN COPY AND PASTE IT VIA ADVANCED MODE!!"/><LineBreak/><LineBreak/><Run Text=""/><Hyperlink NavigateUri="https://discord.gg/AhB4NgtPhK" TextDecorations="Underline"><Run Text="FREE PS4 SAVE DECRYPTION: https://discord.gg/AhB4NgtPhK"/></Hyperlink><Run Text=" "/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/></TextBlock>
+                            </Hyperlink.Foreground><Run Text="FromDarkHell"/></Hyperlink><LineBreak/><LineBreak/><Run Text="Thanks to: "/><LineBreak/><Run Text="- Gibbed, apocalyptech, raptor/cfi2017, c0dycode, apple1417, LostInCompression, DOMIN8"/><LineBreak/><Run Text="Extra special thanks to"/><Run Text=" "/><Hyperlink NavigateUri="https://www.deviantart.com/brokennoah/art/Borderlands-3-icons-797030087" TextDecorations="Underline"><Run Text="BrokenNoah"/></Hyperlink><Run Text=" "/><Run Text="for making the main icon of this program!"/><LineBreak/><Run Text="Without their help, this program would not exist."/><LineBreak/><LineBreak/><Run Text="Of course, thanks to Gearbox Software for creating this game!"/><LineBreak/><Run Text="If you wish to support FromDarkHell financially, you can support him via"/><Run Text=" "/><Hyperlink NavigateUri="https://ko-fi.com/fromdarkhell"><Run Text="ko-fi" TextDecorations="Underline"/></Hyperlink><Run Text=" "/><Run Text="or"/><Run Text=" "/><Hyperlink NavigateUri="https://www.patreon.com/fromdarkhell"><Run Text="Patreon" TextDecorations="Underline"/></Hyperlink><Run FontWeight="Black"/><LineBreak/><Run FontWeight="Black"/><LineBreak/><Run FontWeight="Black" Text="Thank SomeFunGuy/Shroomz for keeping Redux/Switch inventory database up to date."/><LineBreak/><Run FontWeight="Black" Text="Thank levin and Sigaints for updated weapon part data and lootlemon database"/><LineBreak/><LineBreak/><Run Text="This Editor has been modified by ProtoBuffers!!"/><LineBreak/><Run/><LineBreak/><Run Text="Supports PS4 Save Wizard Saves and BL3-CLI JSON Saves!"/><LineBreak/><Run Text="Unlocked Raw Tab to allow for more customization within saves"/><LineBreak/><Run Text="Updated Inventory UI to have a similar aesthetic to the zakism editor"/><LineBreak/><Run Text="Added New buttons for Save/Profile for those who want to start with a fresh save"/><LineBreak/><Run Text="Added the ability to edit Vault Key 1-3 Values in Profile tab"/><LineBreak/><Run Text="Added Editable XP value in General Tab for easy access."/><LineBreak/><Run Text="Fixed Items from not saving properly when generating from new item button"/><LineBreak/><Run Text="Added Region Data and Skill Tree Tabs, import button from other saves, Import/Export Weapons/Items"/><LineBreak/><Run Text="Added removal confirmation to prevent accidents"/><LineBreak/><LineBreak/><LineBreak/><Run Text="To load your JSON save change platform in the bottom right of the open save selection box."/><LineBreak/><Run Text="To Save as your JSON change your platform between PC/PS4 in the general tab then after pressing save as change the save type to JSON."/><LineBreak/><Run Text="TO NOT GET AN ERROR IN SAVE WIZARD IMPORT  OPEN THE JSON SAVE IN A JSON EDITOR OR A TEXT EDITOR LIKE NOTEPAD THEN COPY AND PASTE IT VIA ADVANCED MODE!!"/><LineBreak/><LineBreak/><Run Text=""/><Hyperlink NavigateUri="https://discord.gg/AhB4NgtPhK" TextDecorations="Underline"><Run Text="FREE PS4 SAVE DECRYPTION: https://discord.gg/Xcier"/></Hyperlink><Run Text=" "/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><LineBreak/><Run Text="s"/></TextBlock>
 
                     <Expander Header="Batch Processing" HorizontalAlignment="Left" Height="124"
                             VerticalAlignment="Bottom" Width="170" IsExpanded="True" Margin="0,0,0,10">

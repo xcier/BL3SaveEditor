@@ -146,12 +146,25 @@ namespace BL3SaveEditor
                 if (!kvp.Any()) return new ListCollectionView(new List<string>() { "" });
                 string characterName = kvp.First().Key;
 
+                if (!DataPathTranslations.HeadNamesDictionary.ContainsKey(characterName))
+                {
+                    Console.WriteLine($"No head asset paths found for character: {characterName}");
+                    return new ListCollectionView(new List<string>() { "Default Head" });
+                }
+
                 var headAssetPaths = DataPathTranslations.HeadNamesDictionary[characterName];
                 List<string> headNames = new List<string>();
                 foreach (string assetPath in headAssetPaths)
                 {
-                    string headName = DataPathTranslations.headAssetPaths[assetPath];
-                    headNames.Add(headName);
+                    if (DataPathTranslations.headAssetPaths.ContainsKey(assetPath))
+                    {
+                        string headName = DataPathTranslations.headAssetPaths[assetPath];
+                        headNames.Add(headName);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"No data found for asset path: {assetPath}");
+                    }
                 }
 
                 return new ListCollectionView(headNames);
@@ -171,17 +184,31 @@ namespace BL3SaveEditor
                 if (!kvp.Any()) return new ListCollectionView(new List<string>() { "" });
                 string characterName = kvp.First().Key;
 
+                if (!DataPathTranslations.SkinNamesDictionary.ContainsKey(characterName))
+                {
+                    Console.WriteLine($"No skin asset paths found for character: {characterName}");
+                    return new ListCollectionView(new List<string>() { "Default Skin" });
+                }
+
                 var skinAssetPaths = DataPathTranslations.SkinNamesDictionary[characterName];
                 List<string> skinNames = new List<string>();
                 foreach (string assetPath in skinAssetPaths)
                 {
-                    string headName = DataPathTranslations.skinAssetPaths[assetPath];
-                    skinNames.Add(headName);
+                    if (DataPathTranslations.skinAssetPaths.ContainsKey(assetPath))
+                    {
+                        string skinName = DataPathTranslations.skinAssetPaths[assetPath];
+                        skinNames.Add(skinName);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"No data found for asset path: {assetPath}");
+                    }
                 }
 
                 return new ListCollectionView(skinNames);
             }
         }
+
         private IEnumerable<StringSerialPair> cachedItems;
         public ListCollectionView SlotItems
         {
@@ -1168,24 +1195,20 @@ namespace BL3SaveEditor
             // Create a SaveFileDialog instance
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
-                FileName = "ItemCodes", // Default file name
-                DefaultExt = ".txt", // Default file extension
-                Filter = "Text documents (.txt)|*.txt" // Filter files by extension
+                FileName = "ItemCodes", 
+                DefaultExt = ".txt",
+                Filter = "Text documents (.txt)|*.txt"
             };
 
-            // Show save file dialog box
             bool? result = saveFileDialog.ShowDialog();
 
-            // Process save file dialog box results
             if (result == true)
             {
                 // Save document
                 string filename = saveFileDialog.FileName;
 
-                // Assuming 'SlotItems' is accessible here and correctly typed
                 var slotItems = SlotItems; // Adapt this line to access SlotItems correctly in your context
 
-                // Call the method to dump SlotItems to file, passing the selected path
                 DumpSlotItemsToFile(slotItems.Cast<StringSerialPair>(), filename);
             }
         }
@@ -1195,17 +1218,15 @@ namespace BL3SaveEditor
             {
                 foreach (var item in slotItems)
                 {
-                    // Assuming each item has a property 'Code' or a method to get a code string
-                    writer.WriteLine(item.Val2.EncryptSerial(0)); // Or however you get the code from the item
+                    writer.WriteLine(item.Val2.EncryptSerial(0)); 
                 }
             }
         }
 
-        // This method should be adjusted or implemented as previously described, 
-        // to serialize your SlotItems to a text format and write it to a file.
+
         public void DumpSlotItemsToFile(IEnumerable<object> slotItems, string filePath)
         {
-            // Implementation goes here
+
         }
 
         private void LoadDumpedCodes(string filePath)
@@ -1214,12 +1235,10 @@ namespace BL3SaveEditor
             {
                 var codes = File.ReadAllLines(filePath);
 
-                // Assuming you have a way to process these codes or directly assign them to a data structure
-                // For example, if you have a ListBox or similar control to display the codes:
+
                 foreach (var code in codes)
                 {
-                    // Process each code as needed, for example:
-                    // listBox.Items.Add(code);
+
                 }
             }
             catch (Exception ex)
@@ -1737,20 +1756,56 @@ namespace BL3SaveEditor
             }
         }
 
+        // Confirmation function for removing parts
+        private void DisableConfirmationCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+            ConfirmationEnabled = false;
+        }
+
+        private void DisableConfirmationCheckbox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            ConfirmationEnabled = true;
+        }
+
+        private bool _confirmationEnabled = true;
+        public bool ConfirmationEnabled
+        {
+            get => _confirmationEnabled;
+            set
+            {
+                _confirmationEnabled = value;
+                OnPropertyChanged(nameof(ConfirmationEnabled));
+            }
+        }
+
         private void PartsOnRemove(object sender, MouseButtonEventArgs e)
         {
             if (!IsReorder)
             {
                 var allowEvent = !disableEvents;
-                if (sender is ListView view && allowEvent)
+                if (sender is ListView view && allowEvent && view.SelectedIndex != -1)
                 {
-                    disableEvents = true;
-                    if (view.SelectedIndex != -1)
+                    bool proceedWithRemoval = true;
+
+                    // Show confirmation only if ConfirmationEnabled is true.
+                    if (ConfirmationEnabled)
                     {
+                        MessageBoxResult confirmation = MessageBox.Show(
+                            "Are you sure you want to remove this part?",
+                            "Confirm Removal",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Question);
+
+                        proceedWithRemoval = confirmation == MessageBoxResult.Yes;
+                    }
+
+                    if (proceedWithRemoval)
+                    {
+                        disableEvents = true;
                         RemovePart(view.SelectedIndex, sender != ListViewSelectedParts);
                         view.SelectedIndex = -1;
+                        disableEvents = false;
                     }
-                    disableEvents = false;
                 }
             }
         }

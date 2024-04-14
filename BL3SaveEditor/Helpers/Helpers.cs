@@ -187,35 +187,44 @@ namespace BL3SaveEditor.Helpers {
             return null;
         }
     }
-    
+
     /// <summary>
     /// A simple WPF value converter which converts the passed in customization path to a "human safe" name
     /// </summary>
-    public class CustomizationToStringConverter : IValueConverter {
+    public class CustomizationToStringConverter : IValueConverter
+    {
         private Character chx = null;
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
 
-            if (value != null && parameter != null) {
+            if (value != null && parameter != null)
+            {
                 string param = (string)parameter;
                 chx = (Character)value;
                 List<string> val = chx.SelectedCustomizations;
                 string characterName = chx.GetCharacterString();
 
                 string customizationName = "";
-                if (param == "heads") {
-                    foreach (string customization in val) {
+                if (param == "heads")
+                {
+                    foreach (string customization in val)
+                    {
                         // Check if the string is a head
-                        if (DataPathTranslations.headAssetPaths.ContainsKey(customization)) {
+                        if (DataPathTranslations.headAssetPaths.ContainsKey(customization))
+                        {
                             customizationName = DataPathTranslations.headAssetPaths[customization];
                             break;
                         }
                     }
 
                 }
-                else if (param == "skins") {
-                    foreach (string customization in val) {
+                else if (param == "skins")
+                {
+                    foreach (string customization in val)
+                    {
                         // Check if the string is a skin
-                        if (DataPathTranslations.skinAssetPaths.ContainsKey(customization)) {
+                        if (DataPathTranslations.skinAssetPaths.ContainsKey(customization))
+                        {
                             customizationName = DataPathTranslations.skinAssetPaths[customization];
                             break;
                         }
@@ -229,47 +238,56 @@ namespace BL3SaveEditor.Helpers {
             return null;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
-            if (value != null && chx != null) {
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value != null && chx != null)
+            {
                 string param = (string)parameter;
                 string selectedCustomization = (string)value;
 
                 List<string> customizations = chx.SelectedCustomizations;
                 string characterName = chx.GetCharacterString();
-                if (param == "heads") {
-                    string headAssetPath = DataPathTranslations.HeadNamesDictionary[characterName].Where(x => DataPathTranslations.headAssetPaths[x] == selectedCustomization).FirstOrDefault();
-                    for (int i = 0; i < customizations.Count; i++) {
-                        if (DataPathTranslations.headAssetPaths.ContainsKey(customizations[i])) {
-                            customizations[i] = headAssetPath;
-                            break;
-                        }
-                    }
-                    if (customizations.Count <= 0) customizations.Add(headAssetPath);
-                }
-                else if (param == "skins") {
-                    string skinAssetPath = DataPathTranslations.SkinNamesDictionary[characterName].Where(x => DataPathTranslations.skinAssetPaths[x] == selectedCustomization).FirstOrDefault();
-                    for (int i = 0; i < customizations.Count; i++) {
-                        if (DataPathTranslations.skinAssetPaths.ContainsKey(customizations[i])) {
-                            customizations[i] = skinAssetPath;
-                            break;
-                        }
-                    }
-                    if (customizations.Count <= 0) customizations.Add(skinAssetPath);
+                Dictionary<string, string> assetPaths = param == "heads" ? DataPathTranslations.headAssetPaths : DataPathTranslations.skinAssetPaths;
+                Dictionary<string, List<string>> nameDictionaries = param == "heads" ? DataPathTranslations.HeadNamesDictionary : DataPathTranslations.SkinNamesDictionary;
+
+                if (!nameDictionaries.ContainsKey(characterName))
+                {
+                    // Handle missing character name key
+                    Console.WriteLine($"Missing character name in dictionary: {characterName}");
+                    return chx; // or null, or throw new exception, depending on your error handling policy
                 }
 
+                var filteredAssets = nameDictionaries[characterName].Where(x => assetPaths.ContainsKey(x) && assetPaths[x] == selectedCustomization).FirstOrDefault();
 
+                if (string.IsNullOrEmpty(filteredAssets))
+                {
+                    // Log or handle the absence of a corresponding asset path
+                    Console.WriteLine($"No matching asset path found for the customization: {selectedCustomization}");
+                    return chx; // or null, or modify the handling logic as needed
+                }
+
+                string assetPath = assetPaths[filteredAssets];
+                for (int i = 0; i < customizations.Count; i++)
+                {
+                    if (assetPaths.ContainsKey(customizations[i]))
+                    {
+                        customizations[i] = assetPath;
+                        break;
+                    }
+                }
+
+                if (customizations.Count <= 0) customizations.Add(assetPath);
                 return chx;
             }
 
-            if (value == null && chx != null) return chx;
-            return null;
+            return value == null && chx != null ? chx : null;
         }
     }
-    
-    /// <summary>
-    /// A WPF value converter which converts the given <c>parameter</c> ("money"/"eridium") to the integer value based off of the stored character in <c>value</c>
-    /// </summary>
-    public class CurrencyToIntegerConverter : IValueConverter {
+
+        /// <summary>
+        /// A WPF value converter which converts the given <c>parameter</c> ("money"/"eridium") to the integer value based off of the stored character in <c>value</c>
+        /// </summary>
+        public class CurrencyToIntegerConverter : IValueConverter {
         private Character chx = null;
         private uint currencyHash = 0;
 

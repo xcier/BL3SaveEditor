@@ -186,7 +186,6 @@ Part_Shield_Mat_Ward,,,Skin
 Part_Shield_Mat_XPLootBooster,,,Skin
 Part_Shield_Mat_ScreamOfTerror,,,Skin
 Part_Shield_Mat_ANS_LGD_VersionOmNom,,,Skin
-Part_Shield_Mat_ANS_LGD_SlideKick,,,Skin
 GM_Part_Behavior_01_Large,,,Increases radius by 20/40/60%
 GM_Part_Behavior_03_Bouncy,,,"Grenade bounces forward 3/5/7 times, exploding when hitting an enemy. Keeps bouncing after."
 GM_Part_Behavior_04_Sticky,,,Sticks on impact. Deals 25/100/200% bonus damage if stuck directly to an enemy
@@ -372,6 +371,8 @@ ClassMod_Part_Siren_Unique_04_Phasezerker,,,"On Action Skill Used, Amara gains h
 ClassMod_Part_Siren_Unique_05_Siren,,,"Whenever Amara Phasegraps an enemy, her Action Skill Element is applied to all nearby enemies."
 Part_CM_Siren_Raid1,,,"Whenever Amara activates her action skill, she applies her action skill element to herself. Amara's Gun Damage is increased while moving. The quicker she moves, the greater the Gun Damage bonus."
 Part_CM_Siren_DLC1,,,"Whenever an enemy damages Amara, she gains increased Action Skill Cooldown Rate (5%) for a 8 seconds. This effect stacks."
+GPart_All_SkillEnd_UniqueEnemyDamage,,,"On Action Skill End, Deal 125% more Weapon Damage to Badass, Named, and Boss enemies for a short time."
+GPart_All_UniqueEnemyDamage,,,"While an Action Skill is Active, Deal 75% more Weapon Damage to Badass, Named, and Boss enemies."
 GPart_All_SkillEnd_AccuracyHandling,,,"On Action Skill End, Weapon Accuracy(50%) and Handling(200%) are greatly increased for 12 seconds."
 GPart_All_SkillEnd_AddGrenade,,,"On Action Skill Start, Regenerate 1 grenade."
 GPart_All_SkillEnd_CooldownRate,,,"On Action Skill End, action skill cooldown rate is increased by 20% for 15 seconds."
@@ -389,17 +390,48 @@ GPart_All_SkillEnd_NextMagBonusDamageFire,,,"On Action Skill End, the next 2 mag
 GPart_All_SkillEnd_NextMagBonusDamageRadiation,,,"On Action Skill End, the next 2 magazines will have 50% additional bonus radiation damage."
 GPart_All_SkillEnd_NextMagBonusDamageShock,,,"On Action Skill End, the next 2 magazines will have 50% additional bonus shock damage."
 GPart_All_SkillEnd_ProjectileSpeed,,,"On Action Skill End, Projectile Speed is increased by 100% for 12 seconds."
-GPart_All_SkillEnd_UniqueEnemyDamage,,,"On Action Skill End, Deal 125% more Weapon Damage to Badass, Named, and Boss enemies for 15 seconds."
 GPart_All_SkillEnd_WeaponDamage,,,"On Action Skill End, Weapon Damage is increased by 100% for 12 seconds."
+GPart_All_SkillStart_OverchargeShield,,,"On Action Skill Start, activate any effects that trigger on shield break or fill."
+GPart_All_SkillEnd_SplashDamage,,,"On Action Skill End, Splash Damage is increased by 125% for a short time."
+GPart_All_ShieldBreakAmp,,,"On shield break, the next shot deals 100% shield capacity as bonus Amp Damage."
+GPart_All_WeaponDamage,,,"While an Action Skill is Active, Weapon Damage is increased by 100%."
+GPart_All_HighHealthBreaker,,,Gain 150% increased Weapon Damage against enemies above 90% Health.
+GPart_Gunner_SplashDamageIncrease,,,"After exiting Iron Bear, gain 120% increased Splash damage for 18 seconds."
+GPart_Operative_BarrierActive_StatusEffectChance,,,"While Barrier is active, Status Effect Chance is increased by 50%."
+GPart_Siren_Cast_ElementalChance,,,"After using Phasecast, Status Effect Chance is increased by 50% for 8 seconds."
+GPart_Siren_GraspActiveDamage,,,"While Grasp is active, Weapon Damage is increased by 150%."
+GPart_All_HealingPool,,,"On Action Skill End, spawn a healing pool for several seconds."
+GPart_All_GrenadeDamage,,,"While an Action Skill is Active, Grenade Damage is increased by 150%."
+GPart_All_DamageMitigation,,,"While an Action Skill is Active, reduce all incoming damage by a small amount."
 GPart_All_Passive_GenerateTerror_Melee,,,Melee Attacks have a 25% chance to apply Terror to yourself.
 GPart_All_Passive_TerrorAmmoRegen,,,"While Terrified, gain ammo regeneration. The more Terror you have, the higher the bonus. T1: 5%, T2: 10%, T3: 15%"
 GPart_All_Passive_TerrorBonus_CryoDamage,,,"While Terrified, deal 50% bonus cryo damage."
+GPart_All_SlideRegenShields,,,"While Sliding, build up energy that refills a portion of your shields."
+GPart_Beast_FadeActiveDamage,,,"While Fade Away is active, Weapon Damage is increased by 150%."
+GPart_Operative_MNTISDamage,,,MNTIS Shoulder Cannon damage is increased by 150%.
+GPart_Beast_GravitySnareActiveDamage,,,"While Gravity Snare is active, Weapon Damage is increased by 250%."
+GPart_EG_ModeSwitch_WeaponDamage,,,"On Weapon Mode Switch, increase weapon damage by 40% for 2 seconds."
+GPart_Gunner_MinigunDamage,,,"While Iron Bear is active, Minigun damage is increased by 150%."
+GPart_Gunner_RailgunDamage,,,"While Iron Bear is active, Railgun Damage is increased by 150%."
+GPart_Gunner_SalamanderDamage,,,"While Iron Bear is active, Salamander damage is increased by 200%."
+GPart_Gunner_V35LauncherDamage,,,"While Iron Bear is active, V-35 Grenade Launcher damage is increased by 200%."
+GPart_Gunner_VanquisherDamage,,,"While Iron Bear is active, Vanquisher Rocket Pod damage is increased by 150%."
+GPart_Siren_Cast_ElementalChance,,,"After using Phasecast, Status Effect Chance is increased by 50% for a short time."
+GPart_Siren_PhasecastDamage,,,Astral Projection damage is increased by 200% for Phasecast and related action skills.
+GPart_Siren_PhaseflareDamage,,,Orb damage is increased by 200% for Phaseflare and related action skills.
+GPart_Siren_PhaseslamDamage,,,Slam damage is increased by 300% for Phaseslam and related action skills.
+GPart_Gunner_BearFistDamage,,,"While Iron Bear is active, Bear Fist damage is increased by 300%."
+GPart_EG_Gen_SkillEnd_CyberSpike,,,"On Action Skill End, create a cyber spike that damages nearby enemies."
+GPart_Siren_Grasp_ChargeSpeed,,,"While Phasegrasp is active, Weapon charge time is decreased by 71% and Fire Rate is increased by 12%."
+GPart_Passive_All_CritStatusEffect,,,"Elemental critical hits can cause status effects of that element to explode, creating a nova that deals 500% of the status effect's damage."
+GPart_EG_Gen_SkillActive_PulseFireNova,,,"While an Action Skill is Active, constantly trigger novas that deal 60 damage."
 GPart_All_Passive_TerrorBulletReflect,,,"While Terrified, enemy bullets have a chance to reflect off of you. The more Terror you have, the higher the bonus. T1: 15%, T2: 30%, T3: 45%"
 GPart_All_Passive_TerrorCritDamage,,,"While Terrified, gain increased crit damage. The more Terror you have, the higher the bonus. T1: 50%, T2: 75%, T3: 100%"
 GPart_All_Passive_TerrorDamageFireRate,,,"While Terrified, gain increased damage and fire rate. The more Terror you have, the higher the bonus. Damage: T1: 5%, T2: 10%, T3: 15%, Fire Rate: T1: 10%, T2: 20%, T3: 30%"
 GPart_All_Passive_TerrorDamageMitigation,,,"While Terrified, reduce all incoming damage by a small amount. The more Terror you have, the higher the bonus. T1: 10%, T2: 20%, T3: 30%"
 GPart_All_Passive_TerrorHealthRegen,,,"While Terrified, gain health regeneration. The more Terror you have, the higher the bonus. T1: 4%, T2: 6%, T3: 8%"
 GPart_All_Passive_TerrorProjectilesPerShot,,,"While Terrified, you have a chance to fire an extra projectile per shot. The more Terror you have, the higher the bonus. T1: 10%, T2: 20%, T3: 30%"
+GPart_All_Passive_TerrorAccuracy,,,"While Terrified, gain increased accuracy and reduced recoil. The more Terror you have, the higher the bonus."
 GPart_All_SkillEnd_GenerateTerror,,,"On Action Skill End, apply Terror to yourself every 5 seconds for the next 18 seconds. Generate Terror Rate: 3 ?"
 GPart_All_SkillEnd_TerrorHeal,,,"While Terrified, gain health regeneration. The more Terror you have, the higher the bonus. Base Heal: 25%, Terror Stack Bonus: 15%"
 GPart_EG_Generic_ConsecutiveHitsDmgStack,,,"Consecutive Hits increase Weapon Damage by 1% per hit, misses remove all bonuses. (Max: 200 stacks)"
@@ -430,6 +462,9 @@ GPart_Beast_AttackCmd_TerrorFireDMG,,,"After using Attack Command, consume all T
 GPart_Gunner_AutoBear_AmmoRegen,,,"While Auto Bear is active, constantly regenerate 7.5% of magazine size per second."
 GPart_Gunner_AutoBear_FireDamage,,,"While Auto Bear is active, deals 20% bonus Incendiary damage."
 GPart_Gunner_EnterExit_Nova,,,"When entering and exiting Iron Bear, create a nova that deals 175% damage. Radius: 900"
+GPart_Gunner_IronCubActiveDamage,,,"While Iron Cub is active, Weapon Damage is increased by 150%."
+GPart_All_UnhealthyRadDamage,,,"While under 50% health, deal 100% bonus radiation damage."
+GPart_All_ShockFeedback,,,"While an Action Skill is Active, 250% of health damage taken is returned to the attacker as shock damage."
 GPart_Gunner_IBGrenadeChance,,,"While Iron Bear is active, taking damage has a 20% chance to spawn a grenade each 8 seconds."
 GPart_Gunner_KillsLowerCooldown,,,"After exiting Iron Bear, kills increase Iron Bear's cooldown rate by 30% for 30 seconds. Stack Duration: 10 seconds"
 GPart_Gunner_NextMagFireDamage,,,"After exiting Iron Bear, the next 2 magazines will have 40% bonus Incendiary damage."
@@ -1652,7 +1687,7 @@ Part_SR_JAK_Barrel_03_C,Crit Damage +10%,,
 Part_SR_JAK_Barrel_Hunted,,"Damage -20%, Fire Rate -20%",
 Part_SR_JAK_Barrel_Hunter,,Fire Rate -20%,
 Part_SR_JAK_Barrel_Huntress,,"Damage -20%, Fire Rate -20%",
-Part_SR_JAK_Barrel_Monocle,"Recoil Height  -50%, Accuracy  -75%, Damage  +15%",,
+Part_SR_JAK_Barrel_Monocle,"Recoil Height -50%, Accuracy -75%, Damage +15%",,
 Part_SR_JAK_Body,DO NOT REMOVE,,
 Part_SR_JAK_Body_A,Damage +10%,,
 Part_SR_JAK_Body_B,Reload Time -10%,,
