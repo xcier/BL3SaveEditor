@@ -27,7 +27,10 @@ using CsvHelper;
 using System.Globalization;
 using CsvHelper.Configuration;
 using OakSave;
+using System.Runtime.CompilerServices;
+using System.Windows.Threading;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace BL3SaveEditor
 {
@@ -65,34 +68,69 @@ namespace BL3SaveEditor
         public string SearchTerm
         {
             get => _searchTerm;
-            set { _searchTerm = value; UpdateSearchedParts(); RaisePropertyChanged(nameof(SearchTerm)); }
+            set { _searchTerm = value; UpdateSearchedParts(); RaisePropertyChanged(); }
         }
 
-        private void UpdateSearchedParts()
+        private CancellationTokenSource _cts;
+
+        private async void UpdateSearchedParts()
         {
-            if (_lastSearch == null)
+            try
             {
-                _lastSearch = Task.Run(async () =>
+                _cts?.Cancel(); // Cancel any existing search task
+                _cts = new CancellationTokenSource();
+
+                if (_lastSearch == null || _lastSearch.IsCompleted)
                 {
-                    await Task.Delay(60);
-                    var items = SlotItems;
-                    await Dispatcher.BeginInvoke(new Action(() =>
+                    _lastSearch = Task.Run(async () =>
                     {
-                        isSearch = true;
-                        isExpanded = false;
-                        if (LootlemonView.IsVisible)
+                        try
                         {
-                            LootlemonItems = ConvertLootlemon(_lootlemonSerialItems, _searchTerm);
+                            // Delay to debounce the search, passing the cancellation token
+                            await Task.Delay(60, _cts.Token);
+
+                            var items = SlotItems;
+
+                            // Ensure we are on the UI thread and perform the search
+                            await Dispatcher.InvokeAsync(() =>
+                            {
+                                if (_cts.Token.IsCancellationRequested) return; // Exit if canceled
+
+                                isSearch = true;
+                                isExpanded = false;
+
+                                if (LootlemonView.IsVisible)
+                                {
+                                    LootlemonItems = ConvertLootlemon(_lootlemonSerialItems, _searchTerm);
+                                }
+                                else
+                                {
+                                    UpdateSearch(items);
+                                }
+
+                                isExpanded = true;
+                                RaisePropertyChanged(nameof(isExpanded));
+                            }, DispatcherPriority.Background, _cts.Token); // Ensure UI thread is not blocked
                         }
-                        else
+                        catch (TaskCanceledException)
                         {
-                            UpdateSearch(items);
+                            // Handle task cancellation gracefully here if needed
+                            Console.WriteLine("Search task canceled.");
                         }
-                        _lastSearch = null;
-                        isExpanded = true;
-                        RaisePropertyChanged(nameof(isExpanded));
-                    }));
-                });
+                    }, _cts.Token);
+
+                    await _lastSearch; // Await the search task to ensure no race conditions
+                }
+            }
+            catch (TaskCanceledException ex)
+            {
+                // Handle the exception in case the task was canceled
+                Console.WriteLine($"Search task was canceled: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                // Catch any unexpected exceptions
+                Console.WriteLine($"An error occurred: {ex.Message}");
             }
         }
 
@@ -239,13 +277,11 @@ namespace BL3SaveEditor
                                 }
                                 else
                                 {
-                                    // Log the issue, skip the item, or provide a default value
                                     LogIndexOutOfRange(item.InventoryListIndex);
                                 }
                             }
                             catch (Exception ex)
                             {
-                                // Handle any unexpected exceptions
                                 LogException(ex);
                             }
                         }
@@ -440,54 +476,61 @@ namespace BL3SaveEditor
             get
             {
                 if (SelectedSerial == null) return null;
+
                 List<string> validParts = new List<string>();
 
                 // In this case, balances are what actually restrict the items from their anointments.
 
-
-                // Currently no generic parts actually have any excluders/dependencies
-                // but in the future they might so let's still enforce legit parts on them
-                if (!ForceLegitParts) validParts = InventorySerialDatabase.GetPartsForInvKey("InventoryGenericPartData");
+                if (!ForceLegitParts)
+                {
+                    validParts = InventorySerialDatabase.GetPartsForInvKey("InventoryGenericPartData");
+                }
                 else
                 {
-                    validParts = InventorySerialDatabase.GetValidPartsForParts("InventoryGenericPartData", SelectedSerial.GenericParts);
-                    var vx = InventorySerialDatabase.GetValidPartsForParts("InventoryGenericPartData", SelectedSerial.Parts);
-                    var validGenerics = InventorySerialDatabase.GetValidGenericsForBalance(SelectedSerial.Balance);
+                    // Retrieve valid parts for both generic and non-generic parts
+                    var genericValidParts = InventorySerialDatabase.GetValidPartsForParts("InventoryGenericPartData", SelectedSerial.GenericParts) ?? new List<string>();
+                    var partValidParts = InventorySerialDatabase.GetValidPartsForParts("InventoryGenericPartData", SelectedSerial.Parts) ?? new List<string>();
+
+                    // Retrieve the valid generics for the balance
+                    var validGenerics = InventorySerialDatabase.GetValidGenericsForBalance(SelectedSerial.Balance) ?? new List<string>();
 
                     var itemType = InventoryKeyDB.ItemTypeToKey.LastOrDefault(x => x.Value.Contains(SelectedSerial.InventoryKey)).Key;
-                    bool bHasMayhem = (itemType == null);
-                    if (itemType != null)
-                    {
-                        // Only certain item types can be anointed...
-                        bHasMayhem = (itemType != "Grenades" && itemType != "Shields" && itemType != "Class Mods" && itemType != "Artifacts" && itemType != "Eridian Fabricator" && itemType != "Customizations");
-                    }
+                    bool bHasMayhem = string.IsNullOrEmpty(itemType) || (itemType != "Grenades" && itemType != "Shields" && itemType != "Class Mods" && itemType != "Artifacts" && itemType != "Eridian Fabricator" && itemType != "Customizations");
 
                     // Filter out all parts that can't be contained from the balance
-                    validParts = validParts.Where(x => validGenerics.Contains(x) || (bHasMayhem && x.Contains("WeaponMayhemLevel_"))).ToList();
+                    validParts = genericValidParts.Where(x => validGenerics.Contains(x) || (bHasMayhem && x.Contains("WeaponMayhemLevel_"))).ToList();
 
                     // Filter out all the other invalid parts that can't be contained based off of the non-generic parts
-                    validParts = validParts.Where(x => vx.Contains(x) || (bHasMayhem && x.Contains("WeaponMayhemLevel_"))).ToList();
-
+                    validParts = validParts.Where(x => partValidParts.Contains(x) || (bHasMayhem && x.Contains("WeaponMayhemLevel_"))).ToList();
                 }
 
+                // Construct valid parts
                 var validConstructedParts = validParts.Select(x =>
                 {
                     var part = x.Split('.').Last();
                     if (ItemsInfo.TryGetValue(part.ToLower(), out var itemInfo))
                     {
-                        return new ItemInfo { Part = part, Effects = itemInfo.Effects, Negatives = itemInfo.Negatives, Positives = itemInfo.Positives };
+                        return new ItemInfo
+                        {
+                            Part = part,
+                            Effects = itemInfo.Effects,
+                            Negatives = itemInfo.Negatives,
+                            Positives = itemInfo.Positives
+                        };
                     }
                     else
                     {
                         return new ItemInfo { Part = part, Effects = null, Positives = null, Negatives = null };
                     }
-                }).ToList();
-                validConstructedParts.OrderBy(p => p.Part);
+                }).OrderBy(p => p.Part).ToList(); // Apply ordering here
+
+                // Filter by search term if applicable
                 if (!string.IsNullOrWhiteSpace(PartsSearch))
                 {
                     var partsSearchTerm = PartsSearch.ToLowerInvariant();
                     validConstructedParts = validConstructedParts.Where(p => p.Part.ToLowerInvariant().Contains(partsSearchTerm)).ToList();
                 }
+
                 return new ListCollectionView(validConstructedParts);
             }
         }
@@ -509,12 +552,10 @@ namespace BL3SaveEditor
         private StringSerialPair _itemToImport;
 
         public event PropertyChangedEventHandler PropertyChanged;
-        private void RaisePropertyChanged(string propertyName)
+
+        private void RaisePropertyChanged([CallerMemberName] string propertyName = null)
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         /// <summary>
@@ -533,16 +574,27 @@ namespace BL3SaveEditor
             this.profile = null;
             this.saveGame = null;
 
-            using (var reader = new StreamReader("INVENTORY_PARTS_INFO_ALL.csv"))
+            try
             {
-                using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                using (var reader = new StreamReader("INVENTORY_PARTS_INFO_ALL.csv"))
                 {
-                    csv.Context.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("");
-                    ItemsInfo = csv.GetRecords<ItemInfo>()
-                        .GroupBy(r => r.Part)
-                        .Select(r => r.First())
-                        .ToDictionary(r => r.Part.ToLower());
+                    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                    {
+                        csv.Context.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("");
+                        ItemsInfo = csv.GetRecords<ItemInfo>()
+                            .GroupBy(r => r.Part)
+                            .Select(r => r.First())
+                            .ToDictionary(r => r.Part.ToLower());
+                    }
                 }
+            }
+            catch (FileNotFoundException ex)
+            {
+                MessageBox.Show($"CSV file not found: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error reading CSV file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             using (var reader = new StreamReader("LOOTLEMON_BL3_ITEMS.csv"))
             {
@@ -626,7 +678,7 @@ namespace BL3SaveEditor
         {
 
             Dictionary<Platform, string> PlatformFilters = new Dictionary<Platform, string>() {
-                { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|JSON Save (*.json)|*.json" },
+                { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|JSON Save (*.json)|*.*" },
                 { Platform.PS4, "PS4 BL3 Save/Profile (*.*)|*.*" }
             };
 
@@ -659,7 +711,6 @@ namespace BL3SaveEditor
                     bSaveLoaded = false;
                     // Profile tab
                     TabCntrl.SelectedIndex = 5;
-
                 }
                 else
                 {
@@ -668,14 +719,30 @@ namespace BL3SaveEditor
                     bSaveLoaded = true;
                     TabCntrl.SelectedIndex = 0;
 
+                    // Validate the equipped items index
+                    var equippedItems = saveGame.Character.EquippedInventoryLists;
+                    foreach (var item in equippedItems)
+                    {
+                        // Ensure the index is within bounds before accessing
+                        if (IsIndexValid(item.InventoryListIndex, saveGame.InventoryItems.Count))
+                        {
+                            var itemSerial = saveGame.InventoryItems[item.InventoryListIndex];
+                        // Continue processing the item...
+                    }
+                        else
+                        {
+                            LogIndexOutOfRange(item.InventoryListIndex);
+                        }
+                    }
+
                     // This allows us to load data into datagrids
                     RegionsDataGrid.ItemsSource = saveGame.Character.SavedRegions;
                     SkillTreeDataGrid.ItemsSource = saveGame.Character.AbilityData.TreeItemLists;
                 }
 
-            ((TabItem)FindName("RawTabItem")).IsEnabled = true;
+                // Enable certain tabs and buttons now that a save is loaded
+                ((TabItem)FindName("RawTabItem")).IsEnabled = true;
                 ((TabItem)FindName("InventoryTabItem")).IsEnabled = true;
-
                 ((Button)FindName("SaveSaveBtn")).IsEnabled = true;
                 ((Button)FindName("SaveAsSaveBtn")).IsEnabled = true;
 
@@ -696,17 +763,40 @@ namespace BL3SaveEditor
             }
         }
 
+
         private void SaveOpenedFile()
         {
-            if (saveGame != null) BL3Tools.BL3Tools.WriteFileToDisk(saveGame);
-            else if (profile != null)
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();  // Start profiling
+
+            try
             {
-                BL3Tools.BL3Tools.WriteFileToDisk(profile);
-                DirectoryInfo saveFiles = new DirectoryInfo(Path.GetDirectoryName(profile.filePath));
-                InjectGuardianRank(saveFiles.EnumerateFiles("*.sav").Select(x => x.FullName).ToArray());
+                if (saveGame != null)
+                {
+                    Console.WriteLine("Saving game...");
+                    BL3Tools.BL3Tools.WriteFileToDisk(saveGame);
+                }
+                else if (profile != null)
+                {
+                    Console.WriteLine("Saving profile...");
+                    BL3Tools.BL3Tools.WriteFileToDisk(profile);
+
+                    // Inject Guardian Rank
+                    DirectoryInfo saveFiles = new DirectoryInfo(Path.GetDirectoryName(profile.filePath));
+                    InjectGuardianRank(saveFiles.EnumerateFiles("*.sav").Select(x => x.FullName).ToArray());
+                }
+
+                stopwatch.Stop();
+                Console.WriteLine($"Save completed in {stopwatch.ElapsedMilliseconds} ms.");
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                Console.WriteLine($"Error saving the game after {stopwatch.ElapsedMilliseconds} ms: {ex.Message}");
+                MessageBox.Show($"Error saving the game: {ex.Message}", "Save Failed", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
 #if DEBUG
+            // Reload the save in DEBUG mode for testing
             BL3Tools.BL3Tools.Reload = true;
             OpenSave(saveGame == null ? profile.filePath : saveGame.filePath);
             BL3Tools.BL3Tools.Reload = false;
@@ -725,7 +815,7 @@ namespace BL3SaveEditor
             SaveFileDialog saveFileDialog = new SaveFileDialog()
             {
                 Title = "Save BL3 Save/Profile",
-                Filter = "BL3 Save/Profile (*.sav)|*.sav|BL3 JSON Save (*.json)|*.json|BL3 PS4 Save/Profile (*.*)|*.*",
+                Filter = "BL3 Save/Profile (*.sav)|*.sav|BL3 JSON Save (*.json)|*.*|BL3 PS4 Save/Profile (*.*)|*.*",
                 InitialDirectory = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "Borderlands 3", "Saved", "SaveGames")
             };
 
@@ -1297,16 +1387,21 @@ namespace BL3SaveEditor
             StringSerialPair svp = BackpackListView.SelectedValue as StringSerialPair;
             if (svp == null) return;
 
+            // Get the current selected index before deletion
+            int currentIndex = BackpackListView.SelectedIndex;
+
             Console.WriteLine("Deleting item: {0} ({1})", svp.Val1, svp.Val2.UserFriendlyName);
+
             int idx = (saveGame == null ? profile.BankItems.FindIndex(x => ReferenceEquals(x, svp.Val2)) :
-                saveGame.InventoryItems.FindIndex(x => ReferenceEquals(x, svp.Val2)));
+                        saveGame.InventoryItems.FindIndex(x => ReferenceEquals(x, svp.Val2)));
+
             if (saveGame == null)
+            {
                 profile.BankItems.RemoveAt(idx);
+            }
             else
             {
-
-                // We need to preemptively adjust the equipped inventory lists so that way the equipped items stay consistent with the removed items.
-                //? Consider putting this into BL3Tools instead?
+                // Adjust equipped inventory lists to maintain consistency
                 int eilIndex = saveGame.InventoryItems.FindIndex(x => ReferenceEquals(x, svp.Val2));
                 foreach (var vx in saveGame.Character.EquippedInventoryLists)
                 {
@@ -1323,9 +1418,27 @@ namespace BL3SaveEditor
                 }
             }
 
+            // Refresh the ListView's source
             BackpackListView.ItemsSource = null;
             BackpackListView.ItemsSource = SlotItems;
             BackpackListView.Items.Refresh();
+
+            // Automatically select the next item, or the previous if we deleted the last one
+            if (currentIndex < BackpackListView.Items.Count)
+            {
+                // Select the next item if there's one available
+                BackpackListView.SelectedIndex = currentIndex;
+            }
+            else if (currentIndex - 1 >= 0)
+            {
+                // If we deleted the last item, select the previous one
+                BackpackListView.SelectedIndex = currentIndex - 1;
+            }
+
+            // Ensure the selected item is visible
+            BackpackListView.ScrollIntoView(BackpackListView.SelectedItem);
+
+            // Refresh the UI to show the new selection
             RefreshBackpackView();
         }
 
@@ -1492,20 +1605,43 @@ namespace BL3SaveEditor
             {
                 try
                 {
+                    // Load the save file from disk and check if it is a BL3Save object
                     if (!(BL3Tools.BL3Tools.LoadFileFromDisk(file) is BL3Save save))
                     {
-                        Console.WriteLine("Reading in file from \"{0}\"; Incorrect type: {1}");
+                        Console.WriteLine($"Reading in file from \"{file}\"; Incorrect type or failed to load.");
                         continue;
                     }
+
+                    // Check if save.Character and save.Character.GuardianRankCharacterData are not null
+                    if (save.Character?.GuardianRankCharacterData == null)
+                    {
+                        Console.WriteLine($"GuardianRankCharacterData is null in save: {file}");
+                        continue;
+                    }
+
                     var grcd = save.Character.GuardianRankCharacterData;
+
+                    // Check if profile and profile.Profile.GuardianRank are not null
+                    if (profile?.Profile?.GuardianRank == null)
+                    {
+                        Console.WriteLine("GuardianRank in profile is null. Skipping injection.");
+                        continue;
+                    }
+
+                    // Update Guardian Rank data
                     grcd.GuardianAvailableTokens = profile.Profile.GuardianRank.AvailableTokens;
                     grcd.GuardianExperience = profile.Profile.GuardianRank.GuardianExperience;
                     grcd.NewGuardianExperience = profile.Profile.GuardianRank.NewGuardianExperience;
                     grcd.GuardianRewardRandomSeed = profile.Profile.GuardianRank.GuardianRewardRandomSeed;
+
+                    // Prepare to handle RankRewards
                     List<OakSave.GuardianRankRewardCharacterSaveGameData> zeroedGRRanks = new List<OakSave.GuardianRankRewardCharacterSaveGameData>();
+
                     foreach (var grData in grcd.RankRewards)
                     {
                         bool bFoundMatch = false;
+
+                        // Match RankRewards from the profile's GuardianRank
                         foreach (var pGRData in profile.Profile.GuardianRank.RankRewards)
                         {
                             if (pGRData.RewardDataPath.Equals(grData.RewardDataPath))
@@ -1517,22 +1653,25 @@ namespace BL3SaveEditor
                             }
                         }
 
+                        // If no match is found, add it to zeroedGRRanks for removal
                         if (!bFoundMatch) zeroedGRRanks.Add(grData);
                     }
-                    zeroedGRRanks = zeroedGRRanks.Distinct().ToList();
 
-                    // In order to properly save zero-ed or missing GR ranks, we've got to remove them from the list (:
+                    // Remove zero-ed or unmatched GR ranks
+                    zeroedGRRanks = zeroedGRRanks.Distinct().ToList();
                     grcd.RankRewards.RemoveAll(x => zeroedGRRanks.Contains(x));
 
+                    // Write the modified save back to disk
                     BL3Tools.BL3Tools.WriteFileToDisk(save, false);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Failed to inject guardian rank into save: \"{0}\"\n{1}", ex.Message, ex.StackTrace);
+                    // Log any exception that occurs during the injection process
+                    Console.WriteLine($"Failed to inject guardian rank into save: \"{file}\". Error: {ex.Message}\n{ex.StackTrace}");
                 }
                 finally
                 {
-                    Console.WriteLine("Completed injecting guardian rank into saves...");
+                    Console.WriteLine($"Completed injecting guardian rank into save: {file}");
                 }
             }
         }
@@ -1972,8 +2111,8 @@ namespace BL3SaveEditor
         {
             // Reuse the platform filters defined previously
             Dictionary<Platform, string> PlatformFilters = new Dictionary<Platform, string>() {
-        { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|JSON Save (*.json)|*.json" },
-        { Platform.PS4, "PS4 BL3 Save/Profile (*.*)|*.*" }
+        { Platform.PC, "PC BL3 Save (*.sav)|*.sav|JSON Save (*.json)|*.*" },
+        { Platform.PS4, "PS4 BL3 Save (*.*)|*.*" }
     };
 
             OpenFileDialog fileDialog = new OpenFileDialog
@@ -2006,8 +2145,8 @@ namespace BL3SaveEditor
         private void ImportChallengesBtn_Click(object sender, RoutedEventArgs e)
         {
             Dictionary<Platform, string> PlatformFilters = new Dictionary<Platform, string>() {
-        { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|JSON Save (*.json)|*.json" },
-        { Platform.PS4, "PS4 BL3 Save/Profile (*.*)|*.*" }
+        { Platform.PC, "PC BL3 Save (*.sav)|*.sav|JSON Save (*.json)|*.*" },
+        { Platform.PS4, "PS4 BL3 Save (*.*)|*.*" }
     };
 
             OpenFileDialog fileDialog = new OpenFileDialog
@@ -2044,8 +2183,8 @@ namespace BL3SaveEditor
         private void ImportSkillTreeBtn_Click(object sender, RoutedEventArgs e)
         {
             Dictionary<Platform, string> PlatformFilters = new Dictionary<Platform, string>() {
-        { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|JSON Save (*.json)|*.json" },
-        { Platform.PS4, "PS4 BL3 Save/Profile (*.*)|*.*" }
+        { Platform.PC, "PC BL3 Save (*.sav)|*.sav|JSON Save (*.json)|*.*" },
+        { Platform.PS4, "PS4 BL3 Save (*.*)|*.*" }
     };
 
             OpenFileDialog fileDialog = new OpenFileDialog
@@ -2085,8 +2224,8 @@ namespace BL3SaveEditor
         private void ImportRegionsBtn_Click(object sender, RoutedEventArgs e)
         {
             Dictionary<Platform, string> PlatformFilters = new Dictionary<Platform, string>() {
-        { Platform.PC, "PC BL3 Save/Profile (*.sav)|*.sav|JSON Save (*.json)|*.json" },
-        { Platform.PS4, "PS4 BL3 Save/Profile (*.*)|*.*" }
+        { Platform.PC, "PC BL3 Save (*.sav)|*.sav|JSON Save (*.json)|*.json" },
+        { Platform.PS4, "PS4 BL3 Save (*.*)|*.*" }
     };
 
             OpenFileDialog fileDialog = new OpenFileDialog
@@ -2163,12 +2302,32 @@ namespace BL3SaveEditor
 
         }
 
+        // Confirmation function for importing lootlemon items
+        private void DisableInventoryConfirmationCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+            ImportConfirmationEnabled = false;
+        }
+
+        private void DisableInventoryConfirmationCheckbox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            ImportConfirmationEnabled = true;
+        }
+
+        private bool _ImportconfirmationEnabled = true;
+        public bool ImportConfirmationEnabled
+        {
+            get => _ImportconfirmationEnabled;
+            set
+            {
+                _ImportconfirmationEnabled = value;
+                OnPropertyChanged(nameof(ImportConfirmationEnabled)); // Updated to match property name
+            }
+        }
+
         private void LootlemonView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _itemToImport = LootlemonView.SelectedItem as StringSerialPair;
         }
-
-        private ICommand _importCommand;
 
         public class DelegateCommand : ICommand
         {
@@ -2179,14 +2338,51 @@ namespace BL3SaveEditor
             {
                 this.action = action;
             }
+
             public bool CanExecute(object parameter)
             {
-                return true;
+                return true; // Change this to actual logic if needed
             }
 
             public void Execute(object parameter)
             {
-                action.Invoke(parameter);
+                action.Invoke(parameter); // Ensure this calls the action properly
+            }
+        }
+        public ICommand ImportCommand => new DelegateCommand(ImportItem);
+
+        private void ImportItem(object parameter)
+        {
+            var itemToImport = parameter as StringSerialPair;
+            if (itemToImport != null)
+            {
+                // Add item to saveGame or profile
+                if (profile == null)
+                    saveGame.AddItem(itemToImport.Val2);
+                else
+                    profile.BankItems.Add(itemToImport.Val2);
+
+                // Refresh ListView or other relevant UI elements
+                BackpackListView.ItemsSource = null;
+                BackpackListView.ItemsSource = SlotItems;
+
+                // Show notification if confirmation is enabled
+                if (ImportConfirmationEnabled)
+                {
+                    MessageBox.Show($"Successfully Imported!", "Import Confirmation", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+        }
+        public class StringToBooleanConverter : IValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+            {
+                return !string.IsNullOrEmpty(value as string);
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+            {
+                throw new NotImplementedException();
             }
         }
 

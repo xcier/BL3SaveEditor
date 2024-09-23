@@ -20,6 +20,7 @@
             <GradientStop Color="Red" Offset="0" />
             <GradientStop Color="Gold" Offset="1.15" />
         </LinearGradientBrush>
+        <helpers:StringToBooleanConverter x:Key="StringToBooleanConverter" />
         <helpers:IntegerSecondsToTimeSpanConverter x:Key="IntegerToSpanConverter1" />
         <helpers:EXPointToLevelConverter x:Key="EXPToLevelConverter1" />
         <helpers:LevelToEXPointConverter x:Key="LevelToEXPConverter1" />
@@ -472,114 +473,124 @@
                         <Image Width="27" Height="26" Source="Icons\game\BITMAP_ICO_Expansion_4k.png" Margin="0 0 5 0"
                                 RenderOptions.BitmapScalingMode="Fant" />
                         <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="Inventory"
-                                FontWeight="Medium" />
+       FontWeight="Medium" />
                     </StackPanel>
                 </TabItem.Header>
                 <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                     <Grid.CommandBindings>
-                        <CommandBinding Command="Copy" Executed="CopyItem_Executed"></CommandBinding>
-                        <CommandBinding Command="{x:Static local:MainWindow.DuplicateCommand}"
-                                Executed="DuplicateItem_Executed" />
+                        <!-- Reverting to x:Static since CommandBinding does not support regular bindings -->
+                        <CommandBinding Command="Copy" Executed="CopyItem_Executed" />
+                        <CommandBinding Command="{x:Static local:MainWindow.DuplicateCommand}" Executed="DuplicateItem_Executed" />
                         <CommandBinding Command="Paste" Executed="PasteItem_Executed" />
-                        <CommandBinding Command="{x:Static local:MainWindow.DeleteCommand}"
-                                Executed="DeleteBinding_Executed" />
+                        <CommandBinding Command="{x:Static local:MainWindow.DeleteCommand}" Executed="DeleteBinding_Executed" />
                     </Grid.CommandBindings>
+
                     <Grid.InputBindings>
                         <KeyBinding Command="Paste" Key="V" Modifiers="Ctrl" />
+                        <!-- InputBindings updated to use Binding -->
+                        <KeyBinding Gesture="CTRL+D" Command="{Binding DuplicateCommand}" />
+                        <KeyBinding Gesture="Delete" Command="{Binding DeleteCommand}" />
                     </Grid.InputBindings>
 
                     <ToolBar x:Uid="BackpackToolBar" AllowDrop="False" Focusable="False" HorizontalAlignment="Stretch"
-                            VerticalAlignment="Top"
-                            Background="{DynamicResource {x:Static adonisUi:Brushes.Layer2BackgroundBrush}}" Height="35">
+             VerticalAlignment="Top"
+             Background="{DynamicResource {x:Static adonisUi:Brushes.Layer2BackgroundBrush}}" Height="35">
                         <Button Name="NewItemBtn" Click="NewItemBtn_Click">
                             <StackPanel Orientation="Horizontal">
                                 <Image Width="27" Height="26" Source="Icons\game\MinimapIcon_Pinging_Loot.png"
-                                        Margin="0 0 5 0" RenderOptions.BitmapScalingMode="Fant" />
+                       Margin="0 0 5 0" RenderOptions.BitmapScalingMode="Fant" />
                                 <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                        Content="New Item" FontWeight="Medium" />
+                       Content="New Item" FontWeight="Medium" />
                             </StackPanel>
                         </Button>
                         <Button Name="NewWeaponBtn" Click="NewWeaponBtn_Click">
                             <StackPanel Orientation="Horizontal">
                                 <Image Width="27" Height="26" Source="Icons\game\MinimapIcon_Pinging_Loot.png"
-                                        Margin="0 0 5 0" RenderOptions.BitmapScalingMode="Fant" />
+                       Margin="0 0 5 0" RenderOptions.BitmapScalingMode="Fant" />
                                 <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                        Content="New Weapon" FontWeight="Medium" />
+                       Content="New Weapon" FontWeight="Medium" />
                             </StackPanel>
                         </Button>
                         <Button Click="PasteCodeBtn_Click" Name="PasteCodeBtn">
                             <StackPanel Orientation="Horizontal">
                                 <Image Width="27" Height="26" Source="Icons\game\AllModIcons_I2E.png" Margin="0 0 5 0"
-                                        RenderOptions.BitmapScalingMode="Fant" />
+                       RenderOptions.BitmapScalingMode="Fant" />
                                 <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                        Content="Paste Code" FontWeight="Medium" />
+                       Content="Paste Code" FontWeight="Medium" />
                             </StackPanel>
                         </Button>
                         <Button Click="DUMPCodeBtn_Click" Name="DUMPCodeBtn">
                             <StackPanel Orientation="Horizontal">
                                 <Image Width="27" Height="26" Source="Icons\game\AllModIcons_I2E.png" Margin="0 0 5 0"
-                                        RenderOptions.BitmapScalingMode="Fant" />
+                       RenderOptions.BitmapScalingMode="Fant" />
                                 <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                        Content="Dump Codes" FontWeight="Medium" />
+                       Content="Dump Codes" FontWeight="Medium" />
                             </StackPanel>
                         </Button>
                         <Button Click="LoadCodeBtn_Click" Name="LoadCodeBtn">
                             <StackPanel Orientation="Horizontal">
                                 <Image Width="27" Height="26" Source="Icons\game\AllModIcons_I2E.png" Margin="0 0 5 0"
-                                        RenderOptions.BitmapScalingMode="Fant" />
+                       RenderOptions.BitmapScalingMode="Fant" />
                                 <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                        Content="Load Codes" FontWeight="Medium" />
+                       Content="Load Codes" FontWeight="Medium" />
                             </StackPanel>
                         </Button>
 
                         <Separator />
 
                         <Button Name="SyncEquippedBtn" Click="SyncEquippedBtn_Click"
-                                IsEnabled="{Binding SaveGameLoaded, TargetNullValue=False}">
+                IsEnabled="{Binding SaveGameLoaded, TargetNullValue=False}">
                             <StackPanel Orientation="Horizontal">
                                 <Image Width="27" Height="26" Source="Icons\game\AllModIcons_I10.png" Margin="0 0 5 0"
-                                        RenderOptions.BitmapScalingMode="Fant" />
+                       RenderOptions.BitmapScalingMode="Fant" />
                                 <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                        Content="Sync Equipped" FontWeight="Medium" />
+                       Content="Sync Equipped" FontWeight="Medium" />
                             </StackPanel>
                         </Button>
                         <Button Name="SyncAllBtn" Click="SyncAllBtn_Click">
                             <StackPanel Orientation="Horizontal">
                                 <Image Width="27" Height="26" Source="Icons\game\AllModIcons_I12.png" Margin="0 0 5 0"
-                                        RenderOptions.BitmapScalingMode="Fant" />
+                       RenderOptions.BitmapScalingMode="Fant" />
                                 <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                        Content="Sync All" FontWeight="Medium" />
+                       Content="Sync All" FontWeight="Medium" />
                             </StackPanel>
                         </Button>
                     </ToolBar>
 
                     <DockPanel LastChildFill="True" Margin="0,35,0,0"
-                            Background="{DynamicResource {x:Static adonisUi:Brushes.Layer2BackgroundBrush}}" Width="275"
-                            HorizontalAlignment="Left" VerticalAlignment="Stretch">
+               Background="{DynamicResource {x:Static adonisUi:Brushes.Layer2BackgroundBrush}}" Width="275"
+               HorizontalAlignment="Left" VerticalAlignment="Stretch">
                         <Grid DockPanel.Dock="Top" Height="30">
-                            <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"  Height="25" VerticalAlignment="Center" HorizontalAlignment="Left"  Width="250" Margin="5" Background="{DynamicResource {x:Static adonisUi:Brushes.Layer3BackgroundBrush}}" x:Name="SearchTermTextBox"></TextBox>
-                            <TextBlock Height="25" Width="260" Background="{DynamicResource {x:Static adonisUi:Brushes.Layer3BackgroundBrush}}" IsHitTestVisible="False" Text="Enter Search Term Here" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="8,4,8,4" Margin="5" Foreground="DarkGray">
+                            <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}" Height="26"
+                     VerticalAlignment="Center" HorizontalAlignment="Left" Width="172" Margin="5,2,0,2"
+                     Background="{DynamicResource {x:Static adonisUi:Brushes.Layer3BackgroundBrush}}" x:Name="SearchTermTextBox" />
+                            <TextBlock Height="26" Width="172" Background="{DynamicResource {x:Static adonisUi:Brushes.Layer3BackgroundBrush}}"
+                       IsHitTestVisible="False" Text="Enter Search Term Here" VerticalAlignment="Center"
+                       HorizontalAlignment="Left" Padding="8,4,8,4" Margin="5,2,0,2" Foreground="DarkGray">
                                 <TextBlock.Style>
                                     <Style TargetType="{x:Type TextBlock}">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Setter Property="Visibility" Value="Collapsed" />
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding Text, ElementName=SearchTermTextBox}" Value="">
-                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Setter Property="Visibility" Value="Visible" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Style>
                             </TextBlock>
+                            <CheckBox x:Name="DisableInventoryConfirmationCheckbox" Content="Notification" Margin="182,4,5,6" Checked="DisableInventoryConfirmationCheckbox_Checked" Unchecked="DisableInventoryConfirmationCheckbox_Unchecked"/>
                         </Grid>
                         <TabControl>
                             <TabItem>
-                                <TabItem.Header>Items</TabItem.Header>
+                                <TabItem.Header>Inventory</TabItem.Header>
                                 <ListView ItemsSource="{Binding Path=SlotItems}" HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch" Name="BackpackListView" SelectionMode="Single"
                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                adonisExtensions:LayerExtension.IncreaseLayer="True"
-                                ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="False"
+                                ScrollViewer.VerticalScrollBarVisibility="Visible" 
+                                VirtualizingPanel.IsVirtualizing="True"
+                                VirtualizingPanel.VirtualizationMode="Recycling"
                                 VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                                ScrollViewer.CanContentScroll="True"
                                 SelectionChanged="BackpackListView_Selected" Loaded="BackpackListView_Selected"
                                 PreviewMouseWheel="BackpackListView_MouseWheel" IsSynchronizedWithCurrentItem="True">
 
@@ -591,12 +602,13 @@
                                                         <Setter.Value>
                                                             <ControlTemplate>
                                                                 <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                                                                Background="{DynamicResource {x:Static adonisUi:Brushes.Layer2BackgroundBrush}}">
+                                                      Background="{DynamicResource {x:Static adonisUi:Brushes.Layer2BackgroundBrush}}">
+                                                                    <!-- Fix RelativeSource binding -->
                                                                     <Expander IsTabStop="False" Background="Transparent"
-                                                                    Margin="5 5 0 0" IsExpanded="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MainWindow}}, Path=isExpanded}" >
+                                                              Margin="5 5 0 0" IsExpanded="{Binding DataContext.isExpanded, RelativeSource={RelativeSource AncestorType=Window}}">
                                                                         <Expander.Header>
                                                                             <TextBlock Background="Transparent" FontSize="15"
-                                                                            FontWeight="Bold" Foreground="White" Text="{Binding Path=Name}" />
+                                                                       FontWeight="Bold" Foreground="White" Text="{Binding Path=Name}" />
                                                                         </Expander.Header>
 
                                                                         <ItemsPresenter Margin="0 5 0 0" />
@@ -614,7 +626,7 @@
                                         <Style TargetType="{x:Type ListViewItem}">
                                             <Setter Property="Margin" Value="0,-1,0,0" />
                                             <Setter Property="Background"
-                                            Value="{DynamicResource {x:Static adonisUi:Brushes.Layer3BackgroundBrush}}" />
+                                    Value="{DynamicResource {x:Static adonisUi:Brushes.Layer3BackgroundBrush}}" />
                                         </Style>
                                     </ListView.ItemContainerStyle>
 
@@ -623,12 +635,14 @@
                                             <StackPanel Orientation="Vertical" />
                                         </ItemsPanelTemplate>
                                     </ListView.ItemsPanel>
+
+                                    <!-- Bindings updated for proper data context resolution -->
                                     <ListView.ItemTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Vertical">
-                                                <Label  Content="{Binding}" Margin="0,0,5,5"></Label>
+                                                <Label Content="{Binding}" Margin="0,0,5,5"></Label>
                                                 <StackPanel Orientation="Horizontal">
-                                                    <Border Margin="0,0,5,5" Padding="5" BorderThickness="1" BorderBrush="White" Background="LightSlateGray" CornerRadius="10" >
+                                                    <Border Margin="0,0,5,5" Padding="5" BorderThickness="1" BorderBrush="White" Background="LightSlateGray" CornerRadius="10">
                                                         <TextBlock FontWeight="Bold" Padding="5,0,5,0" Text="{Binding Path=Val2.Level, Mode=OneWay, StringFormat='Level {0}'}" />
                                                     </Border>
                                                     <Border Margin="0,0,5,5" Padding="5" BorderThickness="1" BorderBrush="White" Background="LightSlateGray" CornerRadius="10">
@@ -639,12 +653,6 @@
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
 
-                                    <ListView.InputBindings>
-                                        <KeyBinding Gesture="CTRL+D" Command="{x:Static local:MainWindow.DuplicateCommand}" />
-                                        <KeyBinding Gesture="Delete" Command="{x:Static local:MainWindow.DeleteCommand}" />
-                                    </ListView.InputBindings>
-
-
                                     <ListView.ContextMenu>
                                         <ContextMenu>
                                             <MenuItem Command="Copy">
@@ -654,7 +662,7 @@
                                                 <MenuItem.Header>Copy Code</MenuItem.Header>
                                                 <MenuItem.InputGestureText>Ctrl+C</MenuItem.InputGestureText>
                                             </MenuItem>
-                                            <MenuItem Command="{x:Static local:MainWindow.DuplicateCommand}">
+                                            <MenuItem Command="{Binding DuplicateCommand}">
                                                 <MenuItem.Icon>
                                                     <Image Source="Icons\fugue\documents-stack.png" Height="16" Width="16" />
                                                 </MenuItem.Icon>
@@ -663,7 +671,7 @@
                                             </MenuItem>
                                             <Separator />
 
-                                            <MenuItem Command="{x:Static local:MainWindow.DeleteCommand}">
+                                            <MenuItem Command="{Binding DeleteCommand}">
                                                 <MenuItem.Icon>
                                                     <Image Source="Icons\fugue\cross-script.png" Height="16" Width="16" />
                                                 </MenuItem.Icon>
@@ -676,7 +684,7 @@
                                     <ListView.Resources>
                                         <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource {x:Type ScrollBar}}">
                                             <Setter Property="adonisExtensions:ScrollBarExtension.ExpansionMode"
-                                            Value="AlwaysExpand" />
+                                    Value="AlwaysExpand" />
                                         </Style>
                                     </ListView.Resources>
                                 </ListView>
@@ -690,7 +698,7 @@
                                 ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.CanContentScroll="False"
                                 VirtualizingPanel.IsVirtualizingWhenGrouping="True"
                                 SelectionChanged="LootlemonView_SelectionChanged"
-                                PreviewMouseWheel="BackpackListView_MouseWheel" IsSynchronizedWithCurrentItem="True">
+                            PreviewMouseWheel="BackpackListView_MouseWheel" IsSynchronizedWithCurrentItem="True">
 
                                     <ListView.GroupStyle>
                                         <GroupStyle>
@@ -740,7 +748,7 @@
                                                     <Border Margin="0,0,5,5" Padding="5" BorderThickness="1" BorderBrush="White" Background="Orange" CornerRadius="10">
                                                         <TextBlock FontWeight="Bold" Padding="5,0,5,0" Text="Import"  >
                                                             <TextBlock.InputBindings>
-                                                                <MouseBinding  Command="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MainWindow}}, Path=ImportCommand}" CommandParameter="{Binding}" MouseAction="LeftClick"></MouseBinding>
+                                                                <MouseBinding Command="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MainWindow}}, Path=ImportCommand}" CommandParameter="{Binding}" MouseAction="LeftClick"></MouseBinding>
                                                             </TextBlock.InputBindings>
                                                         </TextBlock>
                                                     </Border>
@@ -799,13 +807,13 @@
                                     </xctk:IntegerUpDown.IsEnabled>
                                 </xctk:IntegerUpDown>
                                 <ComboBox ItemsSource="{Binding ValidBalances}"
-                                        SelectedValue="{Binding SelectedBalance, Mode=TwoWay}"
-                                        Margin="115,60,104,0"
-                                        VerticalAlignment="Top"
-                                        IsEnabled="{Binding Path=SelectedSerial.InventoryKey, TargetNullValue=False}"
-                                        SelectionChanged="ComboBox_SelectionChanged"
-                                        IsTextSearchEnabled="True"
-                                        IsEditable="True" />
+                                    SelectedValue="{Binding SelectedBalance, Mode=TwoWay}"
+                                    Margin="115,60,104,0"
+                                    VerticalAlignment="Top"
+                                    IsEnabled="{Binding Path=SelectedSerial.InventoryKey, Converter={StaticResource StringToBooleanConverter}}"
+                                    SelectionChanged="ComboBox_SelectionChanged"
+                                    IsTextSearchEnabled="True"
+                                    IsEditable="True" />
                                 <Label FontWeight="Normal" Content="Item Balance: " VerticalContentAlignment="Center"
                                         HorizontalAlignment="Left" Margin="10,60,0,0" VerticalAlignment="Top"
                                         Width="100" Height="24" />
@@ -834,7 +842,7 @@
                                 <Button Content="Edit Balance" Click="ChangeTypeBtn_Click" Name="ChangeTypeBtn"
                                         HorizontalAlignment="Right" Margin="0,60,10,0" VerticalAlignment="Top"
                                         Width="89"
-                                        IsEnabled="{Binding Path=SelectedSerial.InventoryKey, TargetNullValue=False}" />
+                                        IsEnabled="{Binding Path=SelectedSerial.InventoryKey, Converter={StaticResource StringToBooleanConverter}, TargetNullValue=False}" />
                                 <CheckBox Content="Force Legit Parts" HorizontalAlignment="Left" Margin="10,147,0,0"
                                         VerticalAlignment="Top" Width="108"
                                         DataContext="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}, Path=DataContext}"

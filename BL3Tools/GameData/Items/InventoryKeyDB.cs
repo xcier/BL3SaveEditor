@@ -40,67 +40,57 @@ namespace BL3Tools.GameData.Items {
         /// </summary>
         /// <param name="JSONString">A JSON string representing the InventorySerialDB</param>
         /// <returns>Whether or not the loading succeeded</returns>
-        public static bool LoadInventoryKeyDatabase(string JSONString) {
-            var lastDB = KeyDatabase;
-            try {
+        public static bool LoadInventoryKeyDatabase(string JSONString)
+        {
+            try
+            {
                 JObject db = JObject.FromObject(JsonConvert.DeserializeObject(JSONString));
                 KeyDictionary = db.ToObject<Dictionary<string, string>>();
                 KeyDatabase = db;
 
-                var invKeys = KeyDictionary.Values.Distinct();
+                // Pre-filter keys to avoid redundant `Where` calls
+                var invKeys = KeyDictionary.Values.Distinct().ToList();
 
                 ItemTypeToKey = new Dictionary<string, List<string>>() {
-                    { "Grenades", invKeys.Where(x => x.Contains("_GrenadeMod_")).ToList() },
-                    { "Shields", invKeys.Where(x => x.Contains("_Shield_")).ToList() },
-                    { "Class Mods", invKeys.Where(x => x.Contains("_ClassMod_")).ToList() },
-                    { "Artifacts", invKeys.Where(x => x.Contains("_Artifact_")).ToList() },
-                    { "Assault Rifles", invKeys.Where(x => x.Contains("_AR_")).ToList() },
-                    { "Pistols", invKeys.Where(x => x.Contains("_Pistol_") || x.Contains("_PS_")).ToList() },
-                    { "SMGs", invKeys.Where(x => x.Contains("_SM_") || x.Contains("_SMG")).ToList() },
-                    { "Heavy Weapons", invKeys.Where(x => x.Contains("_HW_")).ToList() },
-                    { "Shotguns", invKeys.Where(x => x.Contains("_SG_") || x.Contains("_Shotgun_")).ToList() },
-                    { "Sniper Rifles", invKeys.Where(x => x.Contains("_SR_")).ToList() },
-                    { "Eridian Fabricator", invKeys.Where(x => x.Contains("EridianFabricator")).ToList() },
-                    { "Customizations", invKeys.Where(x => x.Contains("Customization")).ToList() }
-                };
+            { "Grenades", invKeys.Where(x => x.Contains("_GrenadeMod_")).ToList() },
+            { "Shields", invKeys.Where(x => x.Contains("_Shield_")).ToList() },
+            { "Class Mods", invKeys.Where(x => x.Contains("_ClassMod_")).ToList() },
+            { "Artifacts", invKeys.Where(x => x.Contains("_Artifact_")).ToList() },
+            { "Assault Rifles", invKeys.Where(x => x.Contains("_AR_")).ToList() },
+            { "Pistols", invKeys.Where(x => x.Contains("_Pistol_") || x.Contains("_PS_")).ToList() },
+            { "SMGs", invKeys.Where(x => x.Contains("_SM_") || x.Contains("_SMG")).ToList() },
+            { "Heavy Weapons", invKeys.Where(x => x.Contains("_HW_")).ToList() },
+            { "Shotguns", invKeys.Where(x => x.Contains("_SG_") || x.Contains("_Shotgun_")).ToList() },
+            { "Sniper Rifles", invKeys.Where(x => x.Contains("_SR_")).ToList() },
+            { "Eridian Fabricator", invKeys.Where(x => x.Contains("EridianFabricator")).ToList() },
+            { "Customizations", invKeys.Where(x => x.Contains("Customization")).ToList() }
+        };
 
                 return true;
             }
-            catch (Exception) {
-                KeyDatabase = lastDB;
+            catch (Exception)
+            {
+                // On failure, retain the previous database state
+                return false;
             }
-
-            return false;
         }
 
 
         public static string GetKeyForBalance(string balance)
         {
-            // Check if balance is null
-            if (balance == null)
-            {
-                // Log or handle the null balance scenario
-                return null;
-            }
+            // Cache the result of Split operation
+            var balanceSuffix = balance.Split('/').LastOrDefault();
+            if (!balance.Contains("."))
+                balance = $"{balance}.{balanceSuffix}";
 
-            // Check if the name exists by default
-            if (!balance.Contains(".")) balance = $"{balance}.{balance.Split('/').LastOrDefault()}";
+            if (KeyDictionary.TryGetValue(balance, out var key))
+                return key;
 
-            // Ensure KeyDictionary is initialized
-            if (KeyDictionary != null)
-            {
-                // Check if the balance key exists in the dictionary
-                if (KeyDictionary.ContainsKey(balance))
-                    return KeyDictionary[balance];
-                else if (KeyDictionary.ContainsKey(balance.ToLower()))
-                    return KeyDictionary[balance.ToLower()];
-            }
-            else
-            {
-                // Log or handle the uninitialized KeyDictionary scenario
-            }
+            // Avoid lowercasing the string twice
+            var lowerBalance = balance.ToLower();
+            if (KeyDictionary.TryGetValue(lowerBalance, out key))
+                return key;
 
-            // If balance key is not found, return null
             return null;
         }
     }

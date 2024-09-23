@@ -27,6 +27,19 @@ namespace BL3SaveEditor.Helpers {
         }
     }
 
+    public class StringToBooleanConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            return !string.IsNullOrEmpty(value as string);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     /// <summary>
     /// A WPF value converter which converts a UInt32 amount of seconds to a TimeSpan (and back and forth)
     /// </summary>
@@ -447,9 +460,9 @@ namespace BL3SaveEditor.Helpers {
         public static Dictionary<string, uint> stringToHash = new Dictionary<string, uint>() {
             { "GoldenKeys", DataPathTranslations.GoldenKeyHash },
             { "DiamondKeys", DataPathTranslations.DiamondKeyHash },
-            { "VaultCard1", DataPathTranslations.VaultCard1Hash },
-            { "VaultCard2", DataPathTranslations.VaultCard2Hash },
-            { "VaultCard3", DataPathTranslations.VaultCard3Hash }
+            { "VaultCard1", 3707609395 },
+            { "VaultCard2", 182401352 },
+            { "VaultCard3", 3896398502 }
         };
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {

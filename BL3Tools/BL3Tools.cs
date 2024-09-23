@@ -179,9 +179,9 @@ namespace BL3Tools {
                     return true;
                 }
             }
-            catch(Exception ex)
+            catch (Exception)
             {
-                return false;
+                // Intentionally left empty
             }
             FileStream fs = new FileStream(filePath, FileMode.Create);
             IOWrapper io = new IOWrapper(fs, Endian.Little, 0x0000000);
